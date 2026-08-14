@@ -1,5 +1,8 @@
 import requests
 import os
+from config import load_env
+
+load_env()
 
 TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 ADMIN = os.environ['ADMIN_TELEGRAM_ID']

@@ -2,6 +2,9 @@ import requests
 import json
 import re
 import os
+from config import load_env
+
+load_env()
 
 MANIFEST_URL = os.environ['MANIFEST_BASE_URL']
 API_KEY = os.environ['MANIFEST_API_KEY']

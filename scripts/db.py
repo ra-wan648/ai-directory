@@ -1,5 +1,8 @@
 import requests
 import os
+from config import load_env
+
+load_env()
 
 CF_ACCOUNT = os.environ['CF_ACCOUNT_ID']
 CF_TOKEN = os.environ['CF_API_TOKEN']
