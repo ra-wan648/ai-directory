@@ -1,0 +1,9 @@
+# Secrets - never commit
+scripts/.env.local
+.env
+.env.local
+*.pem
+bulk_progress.json
+__pycache__/
+*.pyc
+node_modules/

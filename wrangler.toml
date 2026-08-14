@@ -1,0 +1,11 @@
+name = "ai-directory-worker"
+main = "worker/worker.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ai-directory-db"
+database_id = "PLACEHOLDER_REPLACE_WITH_YOUR_D1_ID"
+
+[vars]
+ENVIRONMENT = "production"

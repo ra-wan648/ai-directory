@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Blog Post</title>
+  <meta name="description" content="AI tools guide, review and tutorial.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="navbar-left">
+      <a href="index.html">
+        <span class="navbar-dot"></span>
+        <span>SiteName</span>
+      </a>
+    </div>
+    <div class="navbar-search">
+      <div class="search-bar" id="searchTrigger">
+        <span>🔍</span>
+        <span>Search AI tools...</span>
+        <kbd>⌘K</kbd>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <a href="submit.html" class="nav-link primary">Submit Tool</a>
+      <a href="blog.html" class="nav-link">Blog</a>
+      <a href="prompts.html" class="nav-link">Prompts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="index.html">Home</a><span class="sep">›</span><a href="blog.html">Blog</a><span class="sep">›</span><span>Post</span>
+    </div>
+
+    <div class="post-layout">
+      <div id="postArticle">
+        <div class="empty-state" style="padding:40px;"><span class="loader-spinner"></span> Loading...</div>
+      </div>
+      <aside class="post-sidebar">
+        <div class="sidebar-box" id="relatedToolBox">
+          <h4>🔧 Tools Mentioned</h4>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="left">AI Tools Directory</div>
+    <div class="center">
+      <a href="submit.html">Submit Tool</a>
+      <a href="rss.xml">RSS</a>
+      <a href="blog.html">Blog</a>
+    </div>
+    <div></div>
+  </footer>
+
+  <div id="searchModalRoot"></div>
+  <script src="js/search.js"></script>
+  <script src="js/blog.js"></script>
+</body>
+</html>
