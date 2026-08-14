@@ -1,0 +1,6 @@
+/api/* https://ai-directory-worker.radwanislam648.workers.dev/api/:splat 200
+/og/* https://ai-directory-worker.radwanislam648.workers.dev/og/:splat 200
+/rss.xml https://ai-directory-worker.radwanislam648.workers.dev/rss.xml 200
+/sitemap.xml https://ai-directory-worker.radwanislam648.workers.dev/sitemap.xml 200
+/robots.txt https://ai-directory-worker.radwanislam648.workers.dev/robots.txt 200
+/telegram-webhook* https://ai-directory-worker.radwanislam648.workers.dev/telegram-webhook 200

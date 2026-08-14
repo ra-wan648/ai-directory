@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Your AI Tool - AI Tools Directory</title>
+  <meta name="description" content="Submit your AI tool to the AI Tools Directory. We review and add tools within 24 hours.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="navbar-left">
+      <a href="index.html">
+        <span class="navbar-dot"></span>
+        <span>SiteName</span>
+      </a>
+    </div>
+    <div class="navbar-search">
+      <div class="search-bar" id="searchTrigger">
+        <span>🔍</span>
+        <span>Search AI tools...</span>
+        <kbd>⌘K</kbd>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <a href="submit.html" class="nav-link primary">Submit Tool</a>
+      <a href="blog.html" class="nav-link">Blog</a>
+      <a href="prompts.html" class="nav-link">Prompts</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a><span class="sep">›</span><span>Submit Tool</span>
+    </div>
+
+    <div id="submitWrap">
+      <h1 style="font-size:28px;">Submit Your AI Tool</h1>
+      <p class="page-subtitle">We review and add tools within 24 hours</p>
+
+      <div class="submit-card">
+        <div class="field">
+          <label>Tool Name <span class="req">*</span></label>
+          <input type="text" id="toolName" placeholder="e.g. My Awesome AI Tool" maxlength="80">
+          <div class="field-error" id="errName"></div>
+        </div>
+
+        <div class="field">
+          <label>Website URL <span class="req">*</span></label>
+          <input type="url" id="toolUrl" placeholder="https://example.com" maxlength="200">
+          <div class="field-error" id="errUrl"></div>
+        </div>
+
+        <div class="field">
+          <label>Category <span class="req">*</span></label>
+          <select id="toolCategory">
+            <option value="">Select a category</option>
+            <option value="Writing">Writing</option>
+            <option value="Coding">Coding</option>
+            <option value="Image">Image</option>
+            <option value="Video">Video</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Productivity">Productivity</option>
+            <option value="Research">Research</option>
+            <option value="Audio">Audio</option>
+            <option value="Chat">Chat</option>
+            <option value="Business">Business</option>
+            <option value="Automation">Automation</option>
+            <option value="Analytics">Analytics</option>
+          </select>
+          <div class="field-error" id="errCategory"></div>
+        </div>
+
+        <div class="field">
+          <label>Short Description <span class="req">*</span></label>
+          <textarea id="toolDesc" placeholder="Describe your tool in one or two sentences" maxlength="150"></textarea>
+          <div class="char-counter"><span id="charCount">0</span>/150</div>
+          <div class="field-error" id="errDesc"></div>
+        </div>
+
+        <div class="field">
+          <label>Pricing</label>
+          <div class="pricing-options" id="pricingOptions">
+            <div class="pricing-option" data-price="free">
+              <input type="radio" name="pricing" value="free" id="priceFree">
+              <label for="priceFree">○ Free</label>
+            </div>
+            <div class="pricing-option" data-price="freemium">
+              <input type="radio" name="pricing" value="freemium" id="priceFreemium">
+              <label for="priceFreemium">○ Freemium</label>
+            </div>
+            <div class="pricing-option" data-price="paid">
+              <input type="radio" name="pricing" value="paid" id="pricePaid">
+              <label for="pricePaid">○ Paid</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Your Email <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
+          <input type="email" id="toolEmail" placeholder="you@example.com" maxlength="120">
+          <div class="field-error" id="errEmail"></div>
+        </div>
+
+        <button class="btn btn-accent btn-lg" id="submitBtn">Submit Tool</button>
+        <div class="field-error" id="formError" style="margin-top:12px;text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="left">AI Tools Directory</div>
+    <div class="center">
+      <a href="submit.html">Submit Tool</a>
+      <a href="rss.xml">RSS</a>
+      <a href="blog.html">Blog</a>
+    </div>
+    <div></div>
+  </footer>
+
+  <div id="searchModalRoot"></div>
+  <script src="js/search.js"></script>
+  <script src="js/submit.js"></script>
+</body>
+</html>

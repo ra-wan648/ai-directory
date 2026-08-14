@@ -623,7 +623,7 @@ const handler = {
   // ROUTE 15: GET /sitemap.xml
   // ─────────────────────────────
   async sitemap(env) {
-    return cacheFetch(null, env, 'sitemap', 3600, async () => {
+    return cacheFetch(null, env, 'sitemap-v2', 3600, async () => {
       const [tools, blogs] = await Promise.all([
         env.DB.prepare(
           `SELECT slug, last_updated, created_at FROM tools WHERE status = 'published'`
@@ -659,7 +659,7 @@ const handler = {
   // ROUTE 16: GET /rss.xml
   // ─────────────────────────────
   async rss(env) {
-    return cacheFetch(null, env, 'rss', 3600, async () => {
+    return cacheFetch(null, env, 'rss-v2', 3600, async () => {
       const [tools, blogs] = await Promise.all([
         env.DB.prepare(
           `SELECT name, slug, short_desc, url, created_at FROM tools

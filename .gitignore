@@ -7,3 +7,4 @@ bulk_progress.json
 __pycache__/
 *.pyc
 node_modules/
+.wrangler/
