@@ -513,16 +513,13 @@ const handler = {
   // ROUTE 11: GET /api/categories
   // ─────────────────────────────
   async apiCategories(env) {
-    await env.DB.prepare(
-      `UPDATE categories SET tool_count = (
-         SELECT COUNT(*) FROM tools
-         WHERE category = categories.name AND status = 'published'
-       )`
-    ).run();
-
-    return cacheFetch(null, env, 'api-categories', 3600, async () => {
+    return cacheFetch(null, env, 'api-categories-v2', 3600, async () => {
       const result = await env.DB.prepare(
-        `SELECT * FROM categories ORDER BY tool_count DESC`
+        `SELECT category, COUNT(*) as tool_count
+         FROM tools
+         WHERE status = 'published' AND category IS NOT NULL AND category != ''
+         GROUP BY category
+         ORDER BY tool_count DESC`
       ).all();
       return okResponse({ categories: result.results });
     });

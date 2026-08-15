@@ -258,7 +258,7 @@ function skeletonCard() {
       document.getElementById('statTools').textContent = data.total_tools || 0;
       document.getElementById('statCategories').textContent = data.total_categories || 0;
       document.getElementById('statToday').textContent = data.today_added || 0;
-      document.getElementById('footerStats').innerHTML = `<strong>${data.total_tools || 0}</strong>+ tools · Updated every 6hrs`;
+      document.getElementById('footerStats') && (document.getElementById('footerStats').innerHTML = `<strong>${data.total_tools || 0}</strong>+ tools · Updated every 6hrs`);
     } catch (e) {}
   }
 
@@ -294,12 +294,11 @@ function skeletonCard() {
       const cats = data.categories || [];
       el.innerHTML = '';
       cats.forEach(c => {
-        const btn = document.createElement('button');
-        btn.className = 'sidebar-item';
+        const slug = (c.slug || c.category || c.name || '').toLowerCase().replace(/\s+/g, '-');
         btn.dataset.filterKey = 'category';
-        btn.dataset.filterVal = c.slug;
-        btn.innerHTML = `<span>${escapeHtml(c.icon || categoryEmoji(c.name))}</span><span>${escapeHtml(c.name)}</span><span class="count">${c.tool_count || 0}</span>`;
-        btn.addEventListener('click', () => applyFilter('category', c.slug));
+        btn.dataset.filterVal = slug;
+        btn.innerHTML = `<span>${escapeHtml(c.icon || categoryEmoji(c.name || c.category))}</span><span>${escapeHtml(c.name || c.category)}</span><span class="count">${c.tool_count || c.c || 0}</span>`;
+        btn.addEventListener('click', () => applyFilter('category', slug));
         el.appendChild(btn);
       });
     } catch (e) {
@@ -416,10 +415,13 @@ function skeletonCard() {
   });
 
   /* Subscribe */
-  const subscribeBtn = document.getElementById('subscribeBtn');
-  if (subscribeBtn) {
-    subscribeBtn.addEventListener('click', async () => {
-      const input = document.getElementById('subscribeEmail');
+  document.querySelectorAll('#subscribeBtn, [id="subscribeBtn"]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const form = btn.closest('.subscribe-form-inline') || btn.closest('.subscribe-form');
+      const input = form ? form.querySelector('input[type="email"]') : document.getElementById('subscribeEmail');
+      const successEl = form ? form.nextElementSibling : document.getElementById('subscribeSuccess');
+      if (!input) return;
       const email = input.value.trim();
       if (!email) { input.style.borderColor = '#f87171'; return; }
       try {
@@ -428,15 +430,17 @@ function skeletonCard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
         });
-        subscribeBtn.textContent = '✓';
         input.value = '';
-        setTimeout(() => { subscribeBtn.textContent = '→'; }, 2000);
+        input.style.borderColor = '';
+        if (successEl) { successEl.style.display = 'block'; setTimeout(() => { successEl.style.display = 'none'; }, 3000); }
+        btn.textContent = '\u2713';
+        setTimeout(() => { btn.textContent = '\u2192'; }, 2000);
       } catch (e) {
-        subscribeBtn.textContent = '!';
-        setTimeout(() => { subscribeBtn.textContent = '→'; }, 2000);
+        btn.textContent = '!';
+        setTimeout(() => { btn.textContent = '\u2192'; }, 2000);
       }
     });
-  }
+  });
 
   /* Navbar scroll effect */
   const navbar = document.getElementById('navbar');
