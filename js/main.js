@@ -147,10 +147,11 @@ function skeletonCard() {
       toolGrid.innerHTML = skeletonCard().repeat(8);
       emptyState.style.display = 'none';
     } else {
-      const s = document.createElement('div');
-      s.innerHTML = skeletonCard().repeat(4);
-      s.className = 'grid-load';
-      toolGrid.appendChild(s.firstElementChild ? s : document.createElement('div'));
+      const temp = document.createElement('div');
+      temp.innerHTML = skeletonCard().repeat(4);
+      const frag = document.createDocumentFragment();
+      for (const child of temp.children) frag.appendChild(child);
+      toolGrid.appendChild(frag);
     }
 
     try {

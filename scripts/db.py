@@ -26,14 +26,28 @@ def d1_query(sql, params=None):
 
 
 def tool_exists(slug, url):
-    r = d1_query("SELECT id FROM tools WHERE slug=? OR url=?", [slug, url or ''])
+    """Check if tool exists by slug OR url (deduplication)"""
+    r = d1_query("SELECT id, description, pricing FROM tools WHERE slug=? OR url=?", [slug, url or ''])
     try:
         return bool(r['result'][0]['results'])
     except Exception:
         return False
 
 
+def get_existing_tool(slug, url):
+    """Get existing tool data for update comparison"""
+    r = d1_query("SELECT description, pricing FROM tools WHERE slug=? OR url=?", [slug, url or ''])
+    try:
+        results = r['result'][0]['results']
+        if results:
+            return results[0]
+    except Exception:
+        pass
+    return None
+
+
 def save_tool(tool):
+    """Save tool via Worker internal API. Worker handles insert/update logic."""
     try:
         r = requests.post(f"{WORKER_URL}/api/internal/add-tool",
                           headers=WORKER_HEADERS, json=tool, timeout=30)

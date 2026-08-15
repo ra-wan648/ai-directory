@@ -1419,6 +1419,7 @@ img {
   transition: transform 0.2s ease;
 }
 .bottom-sheet.open {
+  display: block;
   transform: translateY(0);
 }
 @media (max-width: 768px) {
