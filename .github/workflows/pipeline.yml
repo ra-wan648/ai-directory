@@ -14,6 +14,8 @@ jobs:
           python-version: '3.11'
       - name: Install dependencies
         run: pip install requests beautifulsoup4 feedparser playwright apify-client python-telegram-bot
+      - name: Install wrangler
+        run: npm install -g wrangler
       - name: Delete synthetic tools
         run: cd scripts && python delete_synthetic.py
         env:
