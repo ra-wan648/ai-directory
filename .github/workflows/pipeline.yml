@@ -37,6 +37,11 @@ jobs:
           PRODUCT_HUNT_SECRET: ${{secrets.PRODUCT_HUNT_SECRET}}
           CF_API_TOKEN: ${{secrets.CF_API_TOKEN}}
           CLOUDFLARE_ACCOUNT_ID: ${{secrets.CF_ACCOUNT_ID}}
+      - name: LLM fill missing tool data
+        run: python scripts/llm_fill.py
+        env:
+          CF_API_TOKEN: ${{secrets.CF_API_TOKEN}}
+          CLOUDFLARE_ACCOUNT_ID: ${{secrets.CF_ACCOUNT_ID}}
       - name: Telegram stats
         run: cd scripts && python telegram_stats.py
         env:
