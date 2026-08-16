@@ -3,28 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Tool - AI Tools Directory</title>
-  <meta name="description" content="Discover AI tools, pricing, features and alternatives.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
-  <link rel="stylesheet" href="styles.css">
+  <title>AI Tool Detail - AI Directory</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800'>A</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <nav class="navbar" id="navbar">
+  <nav class="navbar">
     <div class="navbar-left">
-      <a href="index.html">
-        <span class="navbar-dot"></span>
-        <span>AI Directory</span>
-      </a>
-    </div>
-    <div class="navbar-search">
-      <div class="search-bar" id="searchTrigger">
-        <span>&#128269;</span>
-        <span>Search AI tools...</span>
-        <kbd>&#8984;K</kbd>
-      </div>
+      <span class="navbar-dot"></span>
+      <a href="index.html" class="navbar-brand">AI Directory</a>
     </div>
     <div class="navbar-right">
       <a href="submit.html" class="nav-link primary">Submit Tool</a>
@@ -33,46 +20,74 @@
     </div>
   </nav>
 
-  <div class="container" id="pageContainer">
-    <div class="breadcrumb" id="breadcrumb" style="padding:20px 0;color:var(--text-muted);font-size:13px;">
-      <a href="index.html" style="color:var(--accent);">Home</a><span style="margin:0 8px;">&rsaquo;</span><span id="bcCat" style="color:var(--text-secondary);"></span><span style="margin:0 8px;">&rsaquo;</span><span id="bcName" style="color:var(--text-primary);font-weight:600;"></span>
-    </div>
+  <div class="tool-layout">
+    <main class="tool-main">
+      <nav class="breadcrumb">
+        <a href="index.html">Home</a> &gt; <a href="#" id="bc-cat">Category</a> &gt; <span id="bc-tool">Tool</span>
+      </nav>
 
-    <div class="empty-state" id="loadingState" style="padding:80px 20px;"><span class="loader-spinner"></span> Loading...</div>
-    <div id="toolContent" style="display:none;"></div>
+      <div class="tool-header">
+        <div class="tool-screenshot" id="tool-screenshot-wrap">
+          <img id="tool-screenshot" alt="Screenshot" hidden>
+          <div class="screenshot-placeholder" id="screenshot-placeholder">
+            <span>No screenshot</span>
+          </div>
+        </div>
+        <div class="tool-info">
+          <div class="tool-title-row">
+            <img id="tool-favicon" alt="" width="48" height="48">
+            <h1 id="tool-name">Loading...</h1>
+            <span id="tool-pricing-badge" class="pricing-badge"></span>
+          </div>
+          <p id="tool-tagline" class="muted">Loading...</p>
+          <div class="tool-actions">
+            <button id="btn-save">❤ Save</button>
+            <a id="btn-visit" class="btn-primary" target="_blank" rel="noopener">Try Now ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <button data-tab="overview" class="active">Overview</button>
+        <button data-tab="pricing">Pricing</button>
+        <button data-tab="features">Features</button>
+        <button data-tab="usecases">Use Cases</button>
+        <button data-tab="alternatives">Alternatives</button>
+        <button data-tab="discussions">Discussions</button>
+      </div>
+      <div id="tab-content" class="tab-content"></div>
+
+      <section class="similar-section">
+        <h3>Similar Tools</h3>
+        <div id="similar-tools" class="grid-3"></div>
+      </section>
+    </main>
+
+    <aside class="tool-sidebar">
+      <div>
+        <h4>Featured Tools</h4>
+        <div id="featured-tools-list"></div>
+      </div>
+      <div>
+        <h4>Top Categories</h4>
+        <div id="top-categories-pills"></div>
+      </div>
+    </aside>
   </div>
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="footer-brand">
-        <h3>AI Directory</h3>
-        <p>Discover the best AI tools, updated daily.</p>
-        <p class="copyright">&copy; 2026 AI Directory. All rights reserved.</p>
-      </div>
+      <div class="footer-title">AI Directory</div>
       <div class="footer-links">
-        <h4>Links</h4>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="submit.html">Submit Tool</a></li>
-          <li><a href="blog.html">Blog</a></li>
-          <li><a href="prompts.html">Prompts</a></li>
-          <li><a href="rss.xml">RSS Feed</a></li>
-        </ul>
+        <a href="index.html">Home</a>
+        <a href="blog.html">Blog</a>
+        <a href="prompts.html">Prompts</a>
+        <a href="submit.html">Submit Tool</a>
       </div>
-      <div class="footer-newsletter">
-        <h4>Stay Updated</h4>
-        <p>New AI tools in your inbox. No spam.</p>
-        <div class="subscribe-form-inline">
-          <input type="email" id="subscribeEmail" placeholder="your@email.com">
-          <button class="subscribe-btn-inline" id="subscribeBtn">&rarr;</button>
-        </div>
-        <div class="subscribe-success" id="subscribeSuccess" style="display:none;">You&#39;re in! &#10003;</div>
-      </div>
+      <div class="footer-copy">© 2026 AI Directory</div>
     </div>
   </footer>
 
-  <div id="searchModalRoot"></div>
-  <script src="js/search.js"></script>
-  <script src="js/tool.js"></script>
+  <script src="js/tool.js" defer></script>
 </body>
 </html>

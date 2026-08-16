@@ -1,122 +1,126 @@
-/* Compare page */
+const API = '';
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+const params = new URLSearchParams(location.search);
+const a = params.get('a');
+const b = params.get('b');
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
 
-function getDomain(url) {
-  try { return new URL(url).hostname; } catch (e) { return ''; }
+function faviconFor(url, size = 40) {
+  try {
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+  } catch (e) {
+    return '';
+  }
 }
 
-function pricingBadge(pricing) {
-  if (!pricing) return '';
-  return `<span class="badge badge-${escapeHtml(pricing)}">${escapeHtml(pricing)}</span>`;
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
 }
 
-function toolHeader(tool) {
-  const domain = getDomain(tool.url);
-  const img = domain
-    ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128" alt="" onerror="this.style.display='none'">`
-    : '<span>🤖</span>';
-  return `
-    <div class="compare-header">
-      ${img}
-      <h2>${escapeHtml(tool.name)}</h2>
-      ${pricingBadge(tool.pricing)}
-    </div>`;
+function featuresList(features) {
+  if (!features) return ['—'];
+  try {
+    const parsed = JSON.parse(features);
+    if (Array.isArray(parsed)) {
+      const list = parsed.filter(x => x).map(x => typeof x === 'object' ? Object.values(x)[0] : x);
+      return list.length ? list : ['—'];
+    }
+  } catch (e) {}
+  return ['—'];
 }
 
-function renderCompare(data) {
-  const t1 = data.tool1;
-  const t2 = data.tool2;
-
-  document.title = `${t1.name} vs ${t2.name} - Compare AI Tools`;
-  document.getElementById('compareTitle').textContent = `${t1.name} vs ${t2.name}`;
-
-  const tags1 = String(t1.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-  const tags2 = String(t2.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-
-  const content = document.getElementById('compareContent');
-  content.innerHTML = `
-    <div class="compare-cols">
-      <div>${toolHeader(t1)}</div>
-      <div>${toolHeader(t2)}</div>
-    </div>
-
-    <table class="compare-table">
-      <thead>
-        <tr><th>Feature</th><th>${escapeHtml(t1.name)}</th><th>${escapeHtml(t2.name)}</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Pricing</td>
-          <td>${pricingBadge(t1.pricing)}</td>
-          <td>${pricingBadge(t2.pricing)}</td>
-        </tr>
-        <tr>
-          <td>Category</td>
-          <td>${escapeHtml(t1.category || '')}</td>
-          <td>${escapeHtml(t2.category || '')}</td>
-        </tr>
-        <tr>
-          <td>Tags</td>
-          <td>${tags1.map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join(' ')}</td>
-          <td>${tags2.map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join(' ')}</td>
-        </tr>
-        <tr>
-          <td>Description</td>
-          <td class="compare-desc">${escapeHtml(t1.short_desc || t1.description || '')}</td>
-          <td class="compare-desc">${escapeHtml(t2.short_desc || t2.description || '')}</td>
-        </tr>
-        <tr>
-          <td>Views</td>
-          <td>${t1.views || 0}</td>
-          <td>${t2.views || 0}</td>
-        </tr>
-        <tr>
-          <td>Link</td>
-          <td>${t1.url ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(t1.url)}" target="_blank" rel="noopener">Visit ↗</a>` : ''}</td>
-          <td>${t2.url ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(t2.url)}" target="_blank" rel="noopener">Visit ↗</a>` : ''}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="compare-links">
-      <a class="btn btn-accent" href="tool.html?slug=${encodeURIComponent(t1.slug)}">View Full ${escapeHtml(t1.name)} Details</a>
-      <a class="btn btn-accent" href="tool.html?slug=${encodeURIComponent(t2.slug)}">View Full ${escapeHtml(t2.name)} Details</a>
-    </div>`;
-
-  document.getElementById('loadingState').style.display = 'none';
-  content.style.display = 'block';
-}
-
-async function loadCompare() {
-  const params = new URLSearchParams(window.location.search);
-  const t1 = params.get('t1');
-  const t2 = params.get('t2');
-  const loading = document.getElementById('loadingState');
-
-  if (!t1 || !t2) {
-    loading.innerHTML = '<div class="empty-state">Add two tools to compare, e.g. compare.html?t1=chatgpt&t2=claude</div>';
+document.addEventListener('DOMContentLoaded', async () => {
+  const container = document.getElementById('compare-container');
+  if (!a || !b) {
+    container.innerHTML = '<p class="muted">Please provide two tools to compare (?a=slug1&b=slug2).</p>';
     return;
   }
 
+  let data;
   try {
-    const data = await (await fetch(`/api/compare/${encodeURIComponent(t1)}/${encodeURIComponent(t2)}`)).json();
-    if (!data.tool1 || !data.tool2) {
-      loading.innerHTML = '<div class="empty-state">One or both tools not found. <a href="index.html" style="color:var(--accent);">Browse the directory</a></div>';
-      return;
-    }
-    renderCompare(data);
+    data = await fetchJSON(`${API}/api/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
   } catch (e) {
-    loading.innerHTML = '<div class="empty-state">Failed to load comparison. <a href="index.html" style="color:var(--accent);">Browse the directory</a></div>';
+    container.innerHTML = '<p class="muted">Failed to load comparison.</p>';
+    return;
   }
+
+  const toolA = data.toolA;
+  const toolB = data.toolB;
+
+  if (!toolA || !toolB) {
+    container.innerHTML = '<p class="muted">One or both tools were not found.</p>';
+    return;
+  }
+
+  const rows = [
+    { label: 'Logo & Name', field: null, render: t => logoCell(t) },
+    { label: 'Category', field: 'category', render: t => t.category || '—' },
+    { label: 'Pricing', field: 'pricing', render: t => t.pricing || '—' },
+    { label: 'Description', field: 'description_full', render: t => escapeHtml((t.description_full || t.description || '—')) },
+    { label: 'Features', field: 'features', render: t => featureCell(t) },
+    { label: 'Visit', field: null, render: t => visitCell(t) }
+  ];
+
+  const thead = `
+    <thead>
+      <tr>
+        <th class="row-label"></th>
+        <th>${logoCell(toolA)}</th>
+        <th>${logoCell(toolB)}</th>
+      </tr>
+    </thead>
+  `;
+
+  const tbody = rows.map(r => {
+    const vA = r.render(toolA);
+    const vB = r.render(toolB);
+    const diff = r.field ? normalized(toolA[r.field]) !== normalized(toolB[r.field]) : false;
+    return `
+      <tr class="${diff ? 'diff-row' : ''}">
+        <td class="row-label">${r.label}</td>
+        <td>${vA}</td>
+        <td>${vB}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `<table class="compare-table">${thead}<tbody>${tbody}</tbody></table>`;
+});
+
+function normalized(v) {
+  if (v == null) return '';
+  let s = String(v).trim().toLowerCase();
+  if (s.startsWith('[')) {
+    try { s = JSON.parse(v).map(x => (x && x.value) || x).sort().join('|'); } catch (e) {}
+  }
+  return s;
 }
 
-loadCompare();
+function logoCell(t) {
+  return `
+    <div class="compare-logo">
+      <img src="${faviconFor(t.url, 40)}" alt="">
+      <div>
+        <div class="name">${escapeHtml(t.name)}</div>
+        <div class="muted" style="font-size:12px">${escapeHtml(t.slug)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function featureCell(t) {
+  const list = featuresList(t.features);
+  return `<ul style="padding-left:18px;margin:0">${list.map(f => `<li>${escapeHtml(String(f))}</li>`).join('')}</ul>`;
+}
+
+function visitCell(t) {
+  return `<a class="compare-visit" href="${escapeHtml(t.visit_url || t.url || '#')}" target="_blank" rel="noopener">Visit ↗</a>`;
+}

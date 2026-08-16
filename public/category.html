@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compare AI Tools - AI Directory</title>
+  <title>AI Tools - AI Directory</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800'>A</text></svg>">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -20,9 +20,30 @@
     </div>
   </nav>
 
-  <div class="compare-wrap">
-    <h1>Compare Tools</h1>
-    <div id="compare-container"><p class="muted">Loading comparison...</p></div>
+  <div class="category-hero">
+    <span class="emoji" id="cat-emoji">🛠️</span>
+    <h1 id="cat-name">Category</h1>
+    <span class="count" id="cat-count">0 tools</span>
+  </div>
+
+  <div class="filter-pills">
+    <button data-filter="all" class="active">All</button>
+    <button data-filter="free">Free</button>
+    <button data-filter="freemium">Freemium</button>
+    <button data-filter="paid">Paid</button>
+    <button data-filter="new">New</button>
+  </div>
+
+  <div class="category-main">
+    <div class="tab-bar">
+      <button data-tab="recent" class="active">Recent</button>
+      <button data-tab="new">New</button>
+      <button data-tab="views">Top Rated</button>
+    </div>
+    <div id="tools-grid" class="grid-4"></div>
+    <div class="load-more-wrap">
+      <button class="load-more" id="load-more">Load More</button>
+    </div>
   </div>
 
   <footer class="footer">
@@ -38,6 +59,6 @@
     </div>
   </footer>
 
-  <script src="js/compare.js" defer></script>
+  <script src="js/category.js" defer></script>
 </body>
 </html>

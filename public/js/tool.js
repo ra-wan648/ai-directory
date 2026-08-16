@@ -1,223 +1,259 @@
-/* Tool detail page */
+const API = '';
 
-const CATEGORY_EMOJIS = {
-  'Writing': '✍️', 'Coding': '💻', 'Image': '🎨', 'Video': '🎬',
-  'Marketing': '📣', 'Productivity': '⚡', 'Research': '🔍', 'Audio': '🎵',
-  'Chat': '💬', 'Business': '💼', 'Automation': '🤖', 'Analytics': '📊'
-};
+const slug = new URLSearchParams(location.search).get('slug');
+let tool = null;
+let comments = [];
 
-const CATEGORY_COLORS = {
-  'Writing': '#22c55e', 'Coding': '#22c55e', 'Image': '#22c55e', 'Video': '#22c55e',
-  'Marketing': '#22c55e', 'Productivity': '#22c55e', 'Research': '#22c55e', 'Audio': '#22c55e',
-  'Chat': '#22c55e', 'Business': '#22c55e', 'Automation': '#22c55e', 'Analytics': '#22c55e'
-};
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
 
-function getDomain(url) {
-  try { return new URL(url).hostname; } catch (e) { return ''; }
-}
-
-function pricingBadge(pricing) {
-  if (!pricing) return '';
-  return `<span class="badge badge-${escapeHtml(pricing)}">${escapeHtml(pricing)}</span>`;
-}
-
-function categoryEmoji(cat) {
-  return CATEGORY_EMOJIS[cat] || '🤖';
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr.replace(' ', 'T'));
-  if (isNaN(d)) return '';
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function readTime(content) {
-  const words = String(content || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-function toolLogo(tool, size = 48) {
-  const domain = getDomain(tool.url);
-  if (tool.logo_url) {
-    return `<img src="${escapeHtml(tool.logo_url)}" alt="" style="width:${size}px;height:${size}px;border-radius:8px;object-fit:contain;" onerror="this.style.display='none'">`;
+function faviconFor(url, size = 32) {
+  try {
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+  } catch (e) {
+    return '';
   }
-  if (domain && domain.includes('huggingface.co')) {
-    return `<div style="width:${size}px;height:${size}px;background:var(--bg-hover);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;">🤗 HF</div>`;
-  }
-  if (domain) {
-    return `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128" alt="" style="width:${size}px;height:${size}px;border-radius:8px;" onerror="this.style.display='none'">`;
-  }
-  const color = CATEGORY_COLORS[tool.category] || '#22c55e';
-  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;">${categoryEmoji(tool.category)}</div>`;
 }
 
-function renderToolCard(tool) {
-  const domain = getDomain(tool.url);
-  const logo = domain
-    ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64" alt="" style="width:18px;height:18px;border-radius:3px;" onerror="this.style.display='none'">`
-    : `<span>${categoryEmoji(tool.category)}</span>`;
-  return `
-    <div class="tool-card" data-slug="${escapeHtml(tool.slug)}">
-      <div class="tool-card-top">
-        ${logo}
-        <span class="tool-card-name">${escapeHtml(tool.name)}</span>
-        ${pricingBadge(tool.pricing)}
-      </div>
-      <div class="tool-card-cat">${categoryEmoji(tool.category)} ${escapeHtml(tool.category || '')}</div>
-      <div class="tool-card-desc">${escapeHtml(tool.short_desc || tool.description || '')}</div>
-      <div class="tool-card-visit">Visit ↗</div>
-    </div>`;
+async function fetchJSON(url, opts) {
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
 }
 
-function bindCardClicks() {
-  document.querySelectorAll('.tool-card').forEach(card => {
-    card.addEventListener('click', () => {
-      window.location.href = `tool.html?slug=${encodeURIComponent(card.dataset.slug)}`;
+function pricingClass(pricing) {
+  const p = (pricing || '').toLowerCase();
+  if (p.includes('paid')) return 'paid';
+  if (p.includes('freemium')) return 'freemium';
+  return 'free';
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!slug) {
+    document.getElementById('tool-name').textContent = 'Missing slug';
+    return;
+  }
+  try {
+    const data = await fetchJSON(`${API}/api/tool/${encodeURIComponent(slug)}`);
+    tool = data.tool;
+    comments = data.comments || [];
+  } catch (e) {
+    document.getElementById('tool-name').textContent = 'Tool not found';
+    return;
+  }
+  populate(tool);
+  setupTabs(tool);
+  loadSidebar(tool);
+  loadSimilar(tool);
+});
+
+function populate(t) {
+  document.getElementById('tool-favicon').src = faviconFor(t.url, 48);
+  document.getElementById('tool-name').textContent = t.name;
+  document.title = `${t.name} - AI Directory`;
+
+  const badge = document.getElementById('tool-pricing-badge');
+  badge.textContent = t.pricing || 'free';
+  badge.className = `pricing-badge ${pricingClass(t.pricing)}`;
+
+  document.getElementById('tool-tagline').textContent = t.short_desc || t.description || '';
+
+  const visit = document.getElementById('btn-visit');
+  visit.href = t.visit_url || t.url || '#';
+
+  if (t.screenshot_url) {
+    document.getElementById('tool-screenshot').src = t.screenshot_url;
+    document.getElementById('tool-screenshot').hidden = false;
+    document.getElementById('screenshot-placeholder').style.display = 'none';
+  } else {
+    document.getElementById('tool-screenshot').hidden = true;
+    document.getElementById('screenshot-placeholder').style.display = 'flex';
+  }
+
+  document.getElementById('bc-cat').textContent = t.category || 'Category';
+  if (t.category) {
+    document.getElementById('bc-cat').href = `/category.html?cat=${encodeURIComponent(t.category)}`;
+  }
+  document.getElementById('bc-tool').textContent = t.name;
+
+  document.getElementById('btn-save').addEventListener('click', function () {
+    this.classList.toggle('saved');
+    this.textContent = this.classList.contains('saved') ? '❤ Saved' : '❤ Save';
+  });
+}
+
+function setupTabs(t) {
+  document.querySelectorAll('.tab-bar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTab(btn.dataset.tab, t);
     });
   });
+  renderTab('overview', t);
 }
 
-function injectJSONLD(tool) {
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.textContent = JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: tool.name,
-    description: tool.description || tool.short_desc || '',
-    applicationCategory: tool.category || '',
-    offers: {
-      '@type': 'Offer',
-      price: tool.pricing === 'free' ? '0' : 'varies'
-    },
-    url: tool.url
-  });
-  document.head.appendChild(script);
+async function renderTab(tab, t) {
+  const el = document.getElementById('tab-content');
+  if (tab === 'overview') {
+    el.innerHTML = `<div>${escapeHtml(t.description_full || t.description || 'No description.')}</div>`;
+  } else if (tab === 'pricing') {
+    el.innerHTML = `<div>${escapeHtml(t.pricing_detail || t.pricing || 'No pricing details.')}</div>`;
+  } else if (tab === 'features') {
+    el.innerHTML = renderFeatures(t.features);
+  } else if (tab === 'usecases') {
+    el.innerHTML = `<p>Suitable for users looking to handle ${escapeHtml(t.category || 'various')} tasks.</p>`;
+  } else if (tab === 'alternatives') {
+    el.innerHTML = '<p>Loading alternatives...</p>';
+    await renderAlternatives(t);
+  } else if (tab === 'discussions') {
+    el.innerHTML = renderDiscussions(t);
+    setupCommentForm(t);
+  }
 }
 
-function genericProsCons(category) {
-  const map = {
-    'Writing': { p: ['Fast content generation', 'Helps overcome writer\'s block', 'Scales content output'], c: ['Needs human editing', 'May produce generic text', 'Fact-checking required'] },
-    'Coding': { p: ['Speeds up development', 'Handles boilerplate well', 'Good for debugging help'], c: ['Review output carefully', 'Security awareness needed', 'Not a substitute for tests'] },
-    'Image': { p: ['Generates unique visuals fast', 'No design skills needed', 'Iterate in seconds'], c: ['May need prompt tuning', 'Licensing varies', 'Rendering takes time'] }
-  };
-  const fallback = { p: ['Saves time on repetitive tasks', 'Easy to get started', 'Continuous improvements'], c: ['Learning curve for some', 'Results need review', 'Premium features cost more'] };
-  const data = map[category] || fallback;
-  return data;
-}
-
-async function fetchTool(slug) {
-  const loading = document.getElementById('loadingState');
-  const content = document.getElementById('toolContent');
+function renderFeatures(features) {
+  if (!features) return '<p>No features listed.</p>';
+  let list = [];
   try {
-    const data = await (await fetch(`/api/tools/${encodeURIComponent(slug)}`)).json();
-    if (!data.tool) {
-      loading.innerHTML = '<div class="empty-state">Tool not found. <a href="index.html" style="color:var(--accent);">← Back to Directory</a></div>';
+    const parsed = JSON.parse(features);
+    if (Array.isArray(parsed)) {
+      list = parsed.filter(x => x).map(x => typeof x === 'object' ? Object.values(x)[0] : x);
+    }
+  } catch (e) {
+    list = [features];
+  }
+  if (!list.length) return '<p>No features listed.</p>';
+  return `<ul>${list.map(f => `<li>${escapeHtml(String(f))}</li>`).join('')}</ul>`;
+}
+
+async function renderAlternatives(t) {
+  const el = document.getElementById('tab-content');
+  try {
+    const data = await fetchJSON(`${API}/api/tools?category=${encodeURIComponent(t.category)}&limit=6`);
+    const alts = (data.tools || []).filter(x => x.slug !== t.slug);
+    if (!alts.length) {
+      el.innerHTML = '<p>No alternatives found.</p>';
       return;
     }
-    renderTool(data);
-    loading.style.display = 'none';
-    content.style.display = 'block';
+    el.innerHTML = `
+      <div class="grid-3">
+        ${alts.map(a => `
+          <div class="tool-card">
+            <div class="tool-card-top">
+              <img src="${faviconFor(a.url, 32)}" alt="" loading="lazy">
+              <span class="tool-name">${escapeHtml(a.name)}</span>
+            </div>
+            <span class="pricing-badge ${pricingClass(a.pricing)}">${escapeHtml(a.pricing || 'free')}</span>
+            <p class="tool-desc">${escapeHtml(a.description || '')}</p>
+            <div class="tool-card-footer">
+              <a class="visit-link" href="/tool.html?slug=${encodeURIComponent(a.slug)}">View →</a>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   } catch (e) {
-    loading.innerHTML = '<div class="empty-state">Failed to load tool. <a href="index.html" style="color:var(--accent);">← Back to Directory</a></div>';
+    el.innerHTML = '<p>Failed to load alternatives.</p>';
   }
 }
 
-function renderTool(data) {
-  const tool = data.tool;
-  const related = data.related || [];
-  const reviews = data.reviews || [];
-
-  document.title = `${tool.name} - AI Tools Directory`;
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.setAttribute('content', String(tool.description || tool.short_desc || '').slice(0, 155));
-  const ogImage = document.querySelector('meta[property="og:image"]');
-  if (ogImage) ogImage.setAttribute('content', `/og/tool/${encodeURIComponent(tool.slug)}`);
-  injectJSONLD(tool);
-
-  const breadcrumb = document.getElementById('breadcrumb');
-  if (breadcrumb) {
-    document.getElementById('bcCat').textContent = tool.category || '';
-    document.getElementById('bcName').textContent = tool.name;
-  }
-
-  const prosCons = genericProsCons(tool.category);
-
-  const tags = String(tool.tags || '').split(',').map(t => t.trim()).filter(Boolean);
-
-  const content = document.getElementById('toolContent');
-  content.innerHTML = `
-    <div class="page-header">
-      ${toolLogo(tool, 48)}
-      <div>
-        <h1>${escapeHtml(tool.name)}</h1>
-        <div style="margin-top:6px;font-size:13px;color:var(--text-2);">${categoryEmoji(tool.category)} ${escapeHtml(tool.category || '')}</div>
-      </div>
-      <div class="header-badges">
-        ${pricingBadge(tool.pricing)}
-      </div>
-      ${tool.url ? `<a class="btn btn-accent" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener">Visit ${escapeHtml(tool.name)} ↗</a>` : ''}
+function renderDiscussions(t) {
+  const items = (comments || []).map(c => `
+    <div class="comment-item">
+      <div class="author">${escapeHtml(c.name)}</div>
+      <div class="body">${escapeHtml(c.comment)}</div>
+      <div class="time">${escapeHtml(c.created_at || '')}</div>
     </div>
+  `).join('');
 
-    <div class="tag-chips">
-      ${tags.map(t => `<span class="tag-chip">${escapeHtml(t)}</span>`).join('')}
+  return `
+    <h3>Discussions</h3>
+    <form id="comment-form" class="comment-form">
+      <input type="text" id="comment-name" placeholder="Your name" required>
+      <textarea id="comment-text" placeholder="Share your thoughts..." required></textarea>
+      <button class="btn-primary" type="submit">Submit</button>
+    </form>
+    <div id="comments-list">
+      ${items || '<p class="muted">No comments yet. Be the first!</p>'}
     </div>
-
-    <p class="page-desc">${escapeHtml(tool.description || tool.short_desc || '')}</p>
-
-    <div class="two-col">
-      <div>
-        <h3>Pros & Cons</h3>
-        <table class="pros-cons">
-          <thead><tr><th>✅ Pros</th><th>❌ Cons</th></tr></thead>
-          <tbody>
-            ${prosCons.p.map((p, i) => `<tr><td>${escapeHtml(p)}</td><td>${escapeHtml(prosCons.c[i] || '')}</td></tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <h3>Quick Facts</h3>
-        <table class="facts-table">
-          <tr><td>Pricing</td><td>${pricingBadge(tool.pricing)}</td></tr>
-          <tr><td>Category</td><td>${escapeHtml(tool.category || '')}</td></tr>
-          <tr><td>Added</td><td>${formatDate(tool.created_at)}</td></tr>
-          <tr><td>Views</td><td>${tool.views || 0}</td></tr>
-          ${tool.url ? `<tr><td>Visit</td><td><a href="${escapeHtml(tool.url)}" target="_blank" rel="noopener">${escapeHtml(getDomain(tool.url))}</a></td></tr>` : ''}
-        </table>
-      </div>
-    </div>
-
-    <div class="section-label" style="margin-top:40px;">Similar ${escapeHtml(tool.category || '')} Tools</div>
-    <div class="grid" id="relatedGrid" style="margin-top:12px;">${related.map(renderToolCard).join('') || '<div class="empty-state">No related tools.</div>'}</div>
-
-    <div class="review-list">
-      <div class="section-label">Reviews & Tutorials</div>
-      ${reviews.length ? reviews.map(r => `
-        <div class="review-item">
-          <a href="post.html?slug=${encodeURIComponent(r.slug)}">${escapeHtml(r.title)}</a>
-          <span class="badge badge-freemium" style="text-transform:none;">${escapeHtml(r.category || '')}</span>
-          <span class="meta">${formatDate(r.published_at)} · Read More →</span>
-        </div>`).join('') : '<div class="empty-state" style="padding:20px;">No reviews yet.</div>'}
-    </div>`;
-
-  bindCardClicks();
+  `;
 }
 
-const params = new URLSearchParams(window.location.search);
-const slug = params.get('slug');
-if (slug) {
-  fetchTool(slug);
-} else {
-  document.getElementById('loadingState').innerHTML = '<div class="empty-state">No tool specified. <a href="index.html" style="color:var(--accent);">← Back to Directory</a></div>';
+function setupCommentForm(t) {
+  const form = document.getElementById('comment-form');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = document.getElementById('comment-name').value.trim();
+    const comment = document.getElementById('comment-text').value.trim();
+    if (!name || !comment) return;
+    try {
+      await fetchJSON(`${API}/api/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool_slug: t.slug, name, comment })
+      });
+      form.reset();
+      const data = await fetchJSON(`${API}/api/comments/${encodeURIComponent(t.slug)}`);
+      comments = data.comments || [];
+      renderTab('discussions', t);
+    } catch (err) {
+      alert('Failed to post comment.');
+    }
+  });
+}
+
+async function loadSidebar(t) {
+  try {
+    const feat = await fetchJSON(`${API}/api/tools?filter=featured&limit=4`);
+    document.getElementById('featured-tools-list').innerHTML = (feat.tools || []).map(f => `
+      <a class="featured-tool" href="/tool.html?slug=${encodeURIComponent(f.slug)}">
+        <img src="${faviconFor(f.url, 24)}" alt="" loading="lazy">
+        <span>${escapeHtml(f.name)}</span>
+      </a>
+    `).join('');
+  } catch (e) {
+    document.getElementById('featured-tools-list').innerHTML = '<p class="muted">None.</p>';
+  }
+
+  try {
+    const cats = await fetchJSON(`${API}/api/categories`);
+    const top = cats.slice(0, 8);
+    document.getElementById('top-categories-pills').innerHTML = top.map(c => `
+      <a class="top-cat-pill" href="/category.html?cat=${encodeURIComponent(c.category)}">${escapeHtml(c.category)}</a>
+    `).join('');
+  } catch (e) {
+    /* noop */
+  }
+}
+
+async function loadSimilar(t) {
+  const el = document.getElementById('similar-tools');
+  try {
+    const data = await fetchJSON(`${API}/api/tools?category=${encodeURIComponent(t.category)}&limit=6`);
+    const sim = (data.tools || []).filter(x => x.slug !== t.slug).slice(0, 3);
+    if (!sim.length) {
+      el.innerHTML = '<p class="muted">No similar tools.</p>';
+      return;
+    }
+    el.innerHTML = sim.map(s => `
+      <div class="tool-card">
+        <div class="tool-card-top">
+          <img src="${faviconFor(s.url, 32)}" alt="" loading="lazy">
+          <span class="tool-name">${escapeHtml(s.name)}</span>
+        </div>
+        <span class="pricing-badge ${pricingClass(s.pricing)}">${escapeHtml(s.pricing || 'free')}</span>
+        <p class="tool-desc">${escapeHtml(s.description || '')}</p>
+        <div class="tool-card-footer">
+          <a class="visit-link" href="/tool.html?slug=${encodeURIComponent(s.slug)}">View →</a>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    el.innerHTML = '<p class="muted">Failed to load similar tools.</p>';
+  }
 }
