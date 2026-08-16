@@ -142,6 +142,71 @@ def batch_insert(tools_batch):
     return total_inserted, len(tools_batch) - total_inserted
 
 
+# Blog/news feeds produce articles, not tools. Their URLs live on news domains.
+NEWS_DOMAINS = (
+    'news.ycombinator.com', 'bensbites.com', 'tldr.tech', 'therundown.ai',
+    'commentary', 'arxiv.org', 'nature.com', 'bloomberg.com', 'techcrunch.com',
+    'youtube.com', 'davidepiffer.com', 'netflixtechblog.com', 'lists.debian.org',
+    'cnn.com', 'bbc.com', 'wired.com', 'theverge.com', 'medium.com',
+)
+
+
+def is_real_tool_url(url):
+    """Return True if the URL points to a real tool website (not a news host)."""
+    try:
+        host = urlparse(url).netloc.lower()
+    except Exception:
+        return False
+    if not host:
+        return False
+    if host == 'x.ai' or host == 'openai.com':
+        return True
+    for d in NEWS_DOMAINS:
+        if d in host:
+            return False
+    return True
+
+
+def batch_insert_blogs(blogs_batch):
+    """Batch insert articles into the blogs table."""
+    if not blogs_batch:
+        return 0, 0
+    env = d1_env()
+    values = []
+    now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    for blog in blogs_batch:
+        title = escape_sql(blog['title'])
+        slug = escape_sql(blog['slug'])
+        content = escape_sql(blog.get('content', '')[:8000])
+        meta = escape_sql(blog.get('meta_description', '')[:255])
+        cat = escape_sql(blog.get('category', 'news'))
+        tool_slug = escape_sql(blog.get('tool_slug', ''))
+        values.append(f"('{title}', '{slug}', '{content}', '{meta}', '{cat}', '{tool_slug}', 'published', '{now}', '{now}')")
+
+    if not values:
+        return 0, 0
+
+    total_inserted = 0
+    for i in range(0, len(values), 30):
+        chunk = values[i:i+30]
+        sql = (f"INSERT INTO blogs (title, slug, content, meta_description, category, tool_slug, status, published_at, created_at) "
+               f"VALUES {', '.join(chunk)} ON CONFLICT(slug) DO NOTHING")
+        r = subprocess.run(
+            ['wrangler', 'd1', 'execute', DB_NAME, '--remote', '--json', '--command', sql],
+            capture_output=True, text=True, timeout=60, env=env
+        )
+        if r.returncode == 0 and '✘' not in r.stdout and 'ERROR' not in r.stdout:
+            try:
+                data = json.loads(r.stdout)
+                meta = data[0].get('meta', {})
+                total_inserted += meta.get('changes', 0)
+            except Exception:
+                total_inserted += len(chunk)
+        time.sleep(0.3)
+
+    return total_inserted, len(blogs_batch) - total_inserted
+
+
 def dedupe_key(url):
     try:
         parsed = urlparse(url)
@@ -508,6 +573,7 @@ HN_KEYWORDS = ['ai', 'artificial intelligence', 'machine learning', 'llm', 'gpt'
 
 
 def scrape_hn():
+    blogs = []
     tools = []
     log("  Source D: HN Algolia")
     try:
@@ -516,7 +582,8 @@ def scrape_hn():
         r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=20)
         data = r.json()
         hits = data.get('hits', [])
-        found = 0
+        found_blog = 0
+        found_tool = 0
         for hit in hits:
             if hit.get('points', 0) <= 30:
                 continue
@@ -527,30 +594,43 @@ def scrape_hn():
             text = (title + ' ' + (hit.get('story_text') or '')).lower()
             if not any(kw in text for kw in HN_KEYWORDS):
                 continue
-            # Only keep tool-like / product launches, not news articles
-            if not any(s in text for s in ['show hn', 'tool', 'app', 'open source',
-                                           'open-source', 'launch', 'api', 'llm', 'gpt',
-                                           'library', 'framework', 'sdk', 'generator',
-                                           'assistant', 'engine', 'platform']):
-                continue
-            tools.append({
-                'name': title,
-                'slug': slugify(title),
-                'description': (hit.get('story_text') or title)[:1000],
-                'short_desc': (hit.get('story_text') or title)[:100],
-                'category': categorize(title + ' ' + (hit.get('story_text') or '')),
-                'pricing': 'free',
-                'website_url': story_url,
-                'logo_url': get_logo_url(story_url),
-                'tags': 'ai,hackernews',
-                'source': 'hackernews',
-            })
-            found += 1
-        log(f"    Found {found} stories")
+            # Sort into real tools vs news/articles.
+            is_tool_like = any(s in text for s in ['show hn', 'launch', 'app', 'api',
+                                                   'library', 'framework', 'sdk', 'generator',
+                                                   'assistant', 'engine'])
+            if is_tool_like and is_real_tool_url(story_url) and 'show hn' in text:
+                tools.append({
+                    'name': title,
+                    'slug': slugify(title),
+                    'description': (hit.get('story_text') or title)[:1000],
+                    'short_desc': (hit.get('story_text') or title)[:100],
+                    'category': categorize(title + ' ' + (hit.get('story_text') or '')),
+                    'pricing': 'free',
+                    'website_url': story_url,
+                    'logo_url': get_logo_url(story_url),
+                    'tags': 'ai,hackernews,show-hn',
+                    'source': 'hackernews',
+                    'kind': 'tool',
+                })
+                found_tool += 1
+            else:
+                # News / article -> route to blogs table.
+                blogs.append({
+                    'title': title,
+                    'slug': slugify(title),
+                    'content': hit.get('story_text') or title,
+                    'meta_description': title[:200],
+                    'category': 'news',
+                    'tool_slug': '',
+                    'website_url': story_url,
+                    'kind': 'blog',
+                })
+                found_blog += 1
+        log(f"    Found {found_blog} articles -> blogs, {found_tool} tools -> tools")
     except Exception as e:
         log(f"    Error: {e}")
-    log(f"  HN total: {len(tools)}")
-    return tools, 'hackernews'
+    log(f"  HN total: {len(blogs)} blogs, {len(tools)} tools")
+    return blogs, tools, 'hackernews'
 
 
 # ─────────────────────────────────────────────
@@ -564,12 +644,13 @@ RSS_FEEDS = {
 
 
 def scrape_rss():
+    blogs = []
     tools = []
     log("  Source E: RSS feeds")
     try:
         from xml.etree import ElementTree as ET
     except Exception:
-        return tools, 'rss'
+        return blogs, tools, 'rss'
 
     for name, feed_url in RSS_FEEDS.items():
         try:
@@ -592,29 +673,25 @@ def scrape_rss():
                 text = (title + ' ' + desc).lower()
                 if not any(kw in text for kw in HN_KEYWORDS):
                     continue
-                # Only keep items that look like tool launches
-                if not any(w in text for w in ['launch', 'tool', 'app', 'platform', 'release', 'new', 'open source', 'opensource', 'software']):
-                    continue
-                tools.append({
-                    'name': title[:200],
+                # RSS items are news/editions -> route to blogs table.
+                blogs.append({
+                    'title': title[:200],
                     'slug': slugify(title),
-                    'description': desc or title,
-                    'short_desc': (desc or title)[:100],
-                    'category': categorize(title + ' ' + desc),
-                    'pricing': 'free',
+                    'content': desc or title,
+                    'meta_description': (desc or title)[:200],
+                    'category': 'news',
+                    'tool_slug': '',
                     'website_url': link,
-                    'logo_url': get_logo_url(link),
-                    'tags': f"ai,rss,{name}",
-                    'source': f'rss_{name}',
+                    'kind': 'blog',
                 })
                 found += 1
                 if found >= 40:
                     break
-            log(f"    {name}: {found} items")
+            log(f"    {name}: {found} items -> blogs")
         except Exception as e:
             log(f"    {name}: Error {e}")
-    log(f"  RSS total: {len(tools)}")
-    return tools, 'rss'
+    log(f"  RSS total: {len(blogs)} blogs, {len(tools)} tools")
+    return blogs, tools, 'rss'
 
 
 # ─────────────────────────────────────────────
@@ -651,8 +728,32 @@ def main():
         log(f"Source: {source_name}")
         log(f"{'='*60}")
 
-        tools, method = scraper_fn()
-        log(f"  Scraped: {len(tools)}")
+        result = scraper_fn()
+        if isinstance(result, tuple) and len(result) == 3:
+            blogs, tools, method = result
+        else:
+            tools, method = result
+            blogs = []
+        log(f"  Scraped: {len(tools)} tools, {len(blogs)} articles")
+
+        # Insert articles (blogs) that are news, not tools.
+        if blogs:
+            new_blogs = []
+            for b in blogs:
+                url = b.get('website_url', '').strip().lower()
+                if not url:
+                    continue
+                key = dedupe_key(url)
+                if key in seen_urls:
+                    continue
+                seen_urls.add(key)
+                new_blogs.append(b)
+            log(f"  New blog articles: {len(new_blogs)}")
+            for i in range(0, len(new_blogs), 30):
+                batch = new_blogs[i:i+30]
+                ins, skp = batch_insert_blogs(batch)
+                log(f"    Blog batch {i//30 + 1}: inserted {ins}/{len(batch)}")
+                time.sleep(0.5)
 
         new_tools = []
         for t in tools:
@@ -662,11 +763,14 @@ def main():
                 continue
             if len(t['name'].strip()) < 3:
                 continue
+            # Only insert to tools table if URL is a real tool website.
+            if not is_real_tool_url(url):
+                continue
             seen_urls.add(key)
             existing_urls.add(url)
             new_tools.append(t)
 
-        log(f"  New unique: {len(new_tools)}")
+        log(f"  New unique tools: {len(new_tools)}")
 
         for i in range(0, len(new_tools), 30):
             batch = new_tools[i:i+30]
