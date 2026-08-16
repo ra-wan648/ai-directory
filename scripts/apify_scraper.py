@@ -30,20 +30,20 @@ APIFY_KEYS = {
 SITE_KEYS = {
     'toolify': 'key4',
     'futurepedia': 'key4',
-    'taaft': 'key1',
+    'taaft': 'key4',
     'allthingsai': 'key1',
-    'futuretools': 'key1',
-    'topai': 'key2',
+    'futuretools': 'key3',
+    'topai': 'key1',
     'aixploria': 'key2',
     'insidr': 'key2',
-    'toolfk': 'key3',
+    'toolfk': 'key1',
     'trendshift': 'key3',
 }
 
 SITES = {
     'toolify': {
         'startUrls': ['https://www.toolify.ai/'],
-        'maxPages': 20,
+        'maxPages': 50,
         'scrollForLazyLoad': False,
     },
     'futurepedia': {
@@ -53,7 +53,7 @@ SITES = {
     },
     'taaft': {
         'startUrls': ['https://theresanaiforthat.com/'],
-        'maxPages': 15,
+        'maxPages': 30,
         'scrollForLazyLoad': False,
     },
     'allthingsai': {
@@ -63,32 +63,32 @@ SITES = {
     },
     'futuretools': {
         'startUrls': ['https://www.futuretools.io/'],
-        'maxPages': 10,
+        'maxPages': 20,
         'scrollForLazyLoad': False,
     },
     'topai': {
         'startUrls': ['https://topai.tools/'],
-        'maxPages': 15,
+        'maxPages': 30,
         'scrollForLazyLoad': False,
     },
     'aixploria': {
         'startUrls': ['https://www.aixploria.com/en/'],
-        'maxPages': 10,
+        'maxPages': 20,
         'scrollForLazyLoad': False,
     },
     'insidr': {
         'startUrls': ['https://www.insidr.ai/ai-tools/'],
-        'maxPages': 10,
+        'maxPages': 20,
         'scrollForLazyLoad': False,
     },
     'toolfk': {
         'startUrls': ['https://www.toolfk.com/'],
-        'maxPages': 10,
+        'maxPages': 20,
         'scrollForLazyLoad': False,
     },
     'trendshift': {
         'startUrls': ['https://trendshift.io/'],
-        'maxPages': 10,
+        'maxPages': 20,
         'scrollForLazyLoad': False,
     },
 }
