@@ -8,17 +8,50 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .notfound { text-align:center; padding:120px 20px; max-width:480px; margin:0 auto; }
+    .big-emoji { font-size:64px; margin-bottom:16px; }
+    .notfound h1 { font-size:24px; font-weight:800; color:var(--text-primary); margin-bottom:8px; }
+    .notfound p { color:var(--text-secondary); margin-bottom:24px; }
+    .notfound-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600; transition:all 0.15s; }
+    .btn-accent { background:var(--accent); color:#fff; }
+    .btn-accent:hover { background:var(--accent-hover); }
+    .btn-ghost { background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border); }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+  </style>
 </head>
 <body>
+  <nav class="navbar" id="navbar">
+    <div class="navbar-left">
+      <a href="index.html">
+        <span class="navbar-dot"></span>
+        <span>AI Directory</span>
+      </a>
+    </div>
+    <div class="navbar-search">
+      <div class="search-bar" id="searchTrigger">
+        <span>&#128269;</span>
+        <span>Search AI tools...</span>
+        <kbd>&#8984;K</kbd>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <a href="submit.html" class="nav-link primary">Submit Tool</a>
+      <a href="blog.html" class="nav-link">Blog</a>
+      <a href="prompts.html" class="nav-link">Prompts</a>
+    </div>
+  </nav>
+
   <div class="notfound">
-    <div class="big-emoji">🤖</div>
+    <div class="big-emoji">&#129302;</div>
     <h1>Page Not Found</h1>
-    <p>The tool or page you're looking for doesn't exist.</p>
+    <p>The tool or page you&#39;re looking for doesn&#39;t exist.</p>
     <div class="notfound-actions">
-      <a class="btn btn-accent" href="index.html">← Back to Directory</a>
-      <button class="btn btn-ghost" data-open-search>Search Tools ⌘K</button>
+      <a class="btn btn-accent" href="index.html">&#8592; Back to Directory</a>
+      <button class="btn btn-ghost" data-open-search>Search Tools &#8984;K</button>
     </div>
   </div>
 

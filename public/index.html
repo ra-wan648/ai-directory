@@ -7,8 +7,8 @@
   <meta name="description" content="Discover the best AI tools for writing, coding, image generation, video, marketing and more. Updated daily with new tools, reviews and prompts.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,14 +17,14 @@
     <div class="navbar-left">
       <a href="index.html">
         <span class="navbar-dot"></span>
-        <span>SiteName</span>
+        <span>AI Directory</span>
       </a>
     </div>
     <div class="navbar-search">
       <div class="search-bar" id="searchTrigger">
-        <span>🔍</span>
+        <span>&#128269;</span>
         <span>Search AI tools...</span>
-        <kbd>⌘K</kbd>
+        <kbd>&#8984;K</kbd>
       </div>
     </div>
     <div class="navbar-right">
@@ -43,7 +43,7 @@
     </div>
 
     <!-- NEW TODAY STRIP -->
-    <div class="section-label">🆕 New Today</div>
+    <div class="section-label">&#128203; New Today</div>
     <div class="strip-scroll" id="newTodayStrip">
       <div class="mini-card skeleton-line" style="width:160px;height:36px;"></div>
       <div class="mini-card skeleton-line" style="width:160px;height:36px;"></div>
@@ -58,9 +58,10 @@
         <div id="sidebarCategories"><div class="skeleton-line" style="height:16px;margin:6px 0;"></div></div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-header">Quick Filters</div>
-        <button class="sidebar-item" data-filter-key="pricing" data-filter-val="free">🆓 Free Only</button>
-        <button class="sidebar-item" data-filter-key="tag" data-filter-val="trending">🔥 Trending</button>
-        <button class="sidebar-item" data-filter-key="tag" data-filter-val="featured">⭐ Featured</button>
+        <button class="sidebar-item" data-filter-key="pricing" data-filter-val="free">&#127873; Free Only</button>
+        <button class="sidebar-item" data-filter-key="tag" data-filter-val="trending">&#128293; Trending</button>
+        <button class="sidebar-item" data-filter-key="tag" data-filter-val="featured">&#11088; Featured</button>
+        <button class="sidebar-item" data-filter-key="tag" data-filter-val="open-source">&#128187; Open Source</button>
         <div class="sidebar-divider"></div>
         <div class="sidebar-header">Latest Prompts</div>
         <div id="sidebarPrompts"></div>
@@ -76,13 +77,14 @@
             <button class="filter-pill" data-key="pricing" data-val="free">Free</button>
             <button class="filter-pill" data-key="pricing" data-val="freemium">Freemium</button>
             <button class="filter-pill" data-key="pricing" data-val="paid">Paid</button>
-            <button class="filter-pill" data-key="tag" data-val="featured">⭐ Featured</button>
-            <button class="filter-pill" data-key="tag" data-val="trending">🔥 Trending</button>
+            <button class="filter-pill" data-key="tag" data-val="featured">&#11088; Featured</button>
+            <button class="filter-pill" data-key="tag" data-val="trending">&#128293; Trending</button>
+            <button class="filter-pill" data-key="tag" data-val="open-source">&#128187; Open Source</button>
           </div>
           <div class="filter-row" id="filterRow2">
-            <button class="filter-pill" data-key="blog" data-val="tutorial">📚 Tutorials</button>
-            <button class="filter-pill" data-key="blog" data-val="review">📰 Reviews</button>
-            <button class="filter-pill" data-key="blog" data-val="news">📣 News</button>
+            <button class="filter-pill" data-key="blog" data-val="tutorial">&#128214; Tutorials</button>
+            <button class="filter-pill" data-key="blog" data-val="review">&#128230; Reviews</button>
+            <button class="filter-pill" data-key="blog" data-val="news">&#128233; News</button>
           </div>
         </div>
 
@@ -97,8 +99,8 @@
 
         <!-- PROMPT STRIP -->
         <div class="section-label" style="margin-top:40px;">
-          🎨 Today's Prompts
-          <a href="prompts.html" class="nav-link" style="margin-left:auto;color:var(--accent);">See All →</a>
+          &#127912; Today&#39;s Prompts
+          <a href="prompts.html" class="nav-link" style="margin-left:auto;color:var(--accent);">See All &rarr;</a>
         </div>
         <div class="prompt-strip-grid" id="promptStrip">
           <div class="skeleton" style="height:180px;"></div>
@@ -121,25 +123,49 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div class="left" id="footerStats"><strong>0</strong>+ tools · Updated every 6hrs</div>
-    <div class="center">
-      <a href="submit.html">Submit Tool</a>
-      <a href="rss.xml">RSS</a>
-      <a href="blog.html">Blog</a>
-    </div>
-    <div class="subscribe-form">
-      <input type="email" id="subscribeEmail" placeholder="your@email.com">
-      <button class="subscribe-btn" id="subscribeBtn" title="Subscribe">→</button>
+    <div class="footer-inner">
+      <!-- Column 1: Brand -->
+      <div class="footer-brand">
+        <h3>AI Directory</h3>
+        <p>Discover the best AI tools, updated daily.</p>
+        <p class="copyright">&copy; 2026 AI Directory. All rights reserved.</p>
+      </div>
+      <!-- Column 2: Links -->
+      <div class="footer-links">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="submit.html">Submit Tool</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="prompts.html">Prompts</a></li>
+          <li><a href="rss.xml">RSS Feed</a></li>
+        </ul>
+      </div>
+      <!-- Column 3: Newsletter -->
+      <div class="footer-newsletter">
+        <h4>Stay Updated</h4>
+        <p>New AI tools in your inbox. No spam.</p>
+        <div class="subscribe-form-inline" id="subscribeForm">
+          <input type="email" id="subscribeEmail" placeholder="your@email.com" required>
+          <button class="subscribe-btn-inline" id="subscribeBtn" title="Subscribe">&rarr;</button>
+        </div>
+        <div class="subscribe-success" id="subscribeSuccess" style="display:none;">You&#39;re in! &check;</div>
+      </div>
     </div>
   </footer>
 
   <!-- Mobile bottom sheet -->
-  <button class="sheet-toggle" id="sheetToggle">☰</button>
+  <button class="sheet-toggle" id="sheetToggle">&#9776;</button>
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
   <div class="bottom-sheet" id="bottomSheet"></div>
 
   <!-- Search modal container -->
-  <div id="searchModalRoot"></div>
+  <div class="search-modal-overlay" id="searchModal">
+    <div class="search-modal">
+      <input class="search-modal-input" id="searchInput" placeholder="Search AI tools..." autocomplete="off">
+      <div class="search-modal-results" id="searchResults"></div>
+    </div>
+  </div>
 
   <script src="js/search.js"></script>
   <script src="js/main.js"></script>

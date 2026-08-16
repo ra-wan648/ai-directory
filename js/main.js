@@ -294,10 +294,14 @@ function skeletonCard() {
       const cats = data.categories || [];
       el.innerHTML = '';
       cats.forEach(c => {
-        const slug = (c.slug || c.category || c.name || '').toLowerCase().replace(/\s+/g, '-');
+        const name = c.name || c.category || '';
+        const slug = (c.slug || name.toLowerCase().replace(/\s+/g, '-'));
+        const count = c.tool_count || c.c || 0;
+        const btn = document.createElement('button');
+        btn.className = 'sidebar-item';
         btn.dataset.filterKey = 'category';
         btn.dataset.filterVal = slug;
-        btn.innerHTML = `<span>${escapeHtml(c.icon || categoryEmoji(c.name || c.category))}</span><span>${escapeHtml(c.name || c.category)}</span><span class="count">${c.tool_count || c.c || 0}</span>`;
+        btn.innerHTML = `<span>${escapeHtml(c.icon || categoryEmoji(name))}</span><span class="cat-name">${escapeHtml(name)}</span><span class="count">${count}</span>`;
         btn.addEventListener('click', () => applyFilter('category', slug));
         el.appendChild(btn);
       });

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,14 +16,14 @@
     <div class="navbar-left">
       <a href="index.html">
         <span class="navbar-dot"></span>
-        <span>SiteName</span>
+        <span>AI Directory</span>
       </a>
     </div>
     <div class="navbar-search">
       <div class="search-bar" id="searchTrigger">
-        <span>🔍</span>
+        <span>&#128269;</span>
         <span>Search AI tools...</span>
-        <kbd>⌘K</kbd>
+        <kbd>&#8984;K</kbd>
       </div>
     </div>
     <div class="navbar-right">
@@ -34,29 +34,30 @@
   </nav>
 
   <div class="container">
-    <div class="breadcrumb">
-      <a href="index.html">Home</a><span class="sep">›</span><span>Submit Tool</span>
+    <div class="page-header">
+      <div class="breadcrumb" style="padding:0;margin-bottom:8px;font-size:13px;color:var(--text-muted);">
+        <a href="index.html" style="color:var(--accent);">Home</a><span style="margin:0 6px;">&rsaquo;</span><span>Submit Tool</span>
+      </div>
+      <h1>Submit Your AI Tool</h1>
+      <p>We review and add tools within 24 hours</p>
     </div>
 
-    <div id="submitWrap">
-      <h1 style="font-size:28px;">Submit Your AI Tool</h1>
-      <p class="page-subtitle">We review and add tools within 24 hours</p>
-
-      <div class="submit-card">
-        <div class="field">
-          <label>Tool Name <span class="req">*</span></label>
+    <div id="submitWrap" style="max-width:560px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;">
+        <div class="form-group">
+          <label>Tool Name <span style="color:#dc2626;">*</span></label>
           <input type="text" id="toolName" placeholder="e.g. My Awesome AI Tool" maxlength="80">
           <div class="field-error" id="errName"></div>
         </div>
 
-        <div class="field">
-          <label>Website URL <span class="req">*</span></label>
+        <div class="form-group">
+          <label>Website URL <span style="color:#dc2626;">*</span></label>
           <input type="url" id="toolUrl" placeholder="https://example.com" maxlength="200">
           <div class="field-error" id="errUrl"></div>
         </div>
 
-        <div class="field">
-          <label>Category <span class="req">*</span></label>
+        <div class="form-group">
+          <label>Category <span style="color:#dc2626;">*</span></label>
           <select id="toolCategory">
             <option value="">Select a category</option>
             <option value="Writing">Writing</option>
@@ -71,55 +72,73 @@
             <option value="Business">Business</option>
             <option value="Automation">Automation</option>
             <option value="Analytics">Analytics</option>
+            <option value="AI Assistant">AI Assistant</option>
+            <option value="Open Source">Open Source</option>
           </select>
           <div class="field-error" id="errCategory"></div>
         </div>
 
-        <div class="field">
-          <label>Short Description <span class="req">*</span></label>
+        <div class="form-group">
+          <label>Short Description <span style="color:#dc2626;">*</span></label>
           <textarea id="toolDesc" placeholder="Describe your tool in one or two sentences" maxlength="150"></textarea>
-          <div class="char-counter"><span id="charCount">0</span>/150</div>
+          <div class="form-hint"><span id="charCount">0</span>/150 characters</div>
           <div class="field-error" id="errDesc"></div>
         </div>
 
-        <div class="field">
+        <div class="form-group">
           <label>Pricing</label>
-          <div class="pricing-options" id="pricingOptions">
-            <div class="pricing-option" data-price="free">
-              <input type="radio" name="pricing" value="free" id="priceFree">
-              <label for="priceFree">○ Free</label>
-            </div>
-            <div class="pricing-option" data-price="freemium">
-              <input type="radio" name="pricing" value="freemium" id="priceFreemium">
-              <label for="priceFreemium">○ Freemium</label>
-            </div>
-            <div class="pricing-option" data-price="paid">
-              <input type="radio" name="pricing" value="paid" id="pricePaid">
-              <label for="pricePaid">○ Paid</label>
-            </div>
+          <div style="display:flex;gap:16px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+              <input type="radio" name="pricing" value="free" id="priceFree" checked> Free
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+              <input type="radio" name="pricing" value="freemium" id="priceFreemium"> Freemium
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+              <input type="radio" name="pricing" value="paid" id="pricePaid"> Paid
+            </label>
           </div>
         </div>
 
-        <div class="field">
-          <label>Your Email <span style="color:var(--text-3);font-weight:400;">(optional)</span></label>
+        <div class="form-group">
+          <label>Your Email <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
           <input type="email" id="toolEmail" placeholder="you@example.com" maxlength="120">
           <div class="field-error" id="errEmail"></div>
         </div>
 
-        <button class="btn btn-accent btn-lg" id="submitBtn">Submit Tool</button>
+        <button class="btn-primary" id="submitBtn" style="width:100%;padding:12px;">Submit Tool</button>
         <div class="field-error" id="formError" style="margin-top:12px;text-align:center;"></div>
       </div>
     </div>
   </div>
 
   <footer class="footer">
-    <div class="left">AI Tools Directory</div>
-    <div class="center">
-      <a href="submit.html">Submit Tool</a>
-      <a href="rss.xml">RSS</a>
-      <a href="blog.html">Blog</a>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h3>AI Directory</h3>
+        <p>Discover the best AI tools, updated daily.</p>
+        <p class="copyright">&copy; 2026 AI Directory. All rights reserved.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="submit.html">Submit Tool</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="prompts.html">Prompts</a></li>
+          <li><a href="rss.xml">RSS Feed</a></li>
+        </ul>
+      </div>
+      <div class="footer-newsletter">
+        <h4>Stay Updated</h4>
+        <p>New AI tools in your inbox. No spam.</p>
+        <div class="subscribe-form-inline">
+          <input type="email" id="subscribeEmail" placeholder="your@email.com">
+          <button class="subscribe-btn-inline" id="subscribeBtn">&rarr;</button>
+        </div>
+        <div class="subscribe-success" id="subscribeSuccess" style="display:none;">You&#39;re in! &#10003;</div>
+      </div>
     </div>
-    <div></div>
   </footer>
 
   <div id="searchModalRoot"></div>
