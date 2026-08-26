@@ -4,40 +4,74 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compare AI Tools - AI Directory</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800'>A</text></svg>">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="navbar-left">
-      <span class="navbar-dot"></span>
-      <a href="index.html" class="navbar-brand">AI Directory</a>
+      <a href="/" class="navbar-brand">
+        <span class="navbar-logo">A</span>
+        <span>AI Directory</span>
+      </a>
+    </div>
+    <div class="navbar-search">
+      <div class="search-bar" id="searchTrigger" role="button" tabindex="0">
+        <span class="search-icon">&#128269;</span>
+        <span>Search AI tools...</span>
+        <kbd>&#8984;K</kbd>
+      </div>
     </div>
     <div class="navbar-right">
-      <a href="submit.html" class="nav-link primary">Submit Tool</a>
-      <a href="blog.html" class="nav-link">Blog</a>
-      <a href="prompts.html" class="nav-link">Prompts</a>
+      <a href="/submit" class="nav-link primary">Submit Tool</a>
+      <a href="/blog" class="nav-link">Blog</a>
+      <a href="/prompts" class="nav-link">Prompts</a>
     </div>
   </nav>
 
   <div class="compare-wrap">
+    <div class="breadcrumb">
+      <a href="/">Home</a><span class="sep">&rsaquo;</span><span>Compare</span>
+    </div>
     <h1>Compare Tools</h1>
     <div id="compare-container"><p class="muted">Loading comparison...</p></div>
   </div>
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="footer-title">AI Directory</div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="blog.html">Blog</a>
-        <a href="prompts.html">Prompts</a>
-        <a href="submit.html">Submit Tool</a>
+      <div class="footer-brand">
+        <h3>AI Directory</h3>
+        <p>Discover the best AI tools, updated daily.</p>
+        <p class="copyright">&copy; 2026 AI Directory. All rights reserved.</p>
       </div>
-      <div class="footer-copy">© 2026 AI Directory</div>
+      <div class="footer-links">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/submit">Submit Tool</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/prompts">Prompts</a></li>
+          <li><a href="/rss.xml">RSS Feed</a></li>
+        </ul>
+      </div>
+      <div class="footer-newsletter">
+        <h4>Stay Updated</h4>
+        <p>New AI tools in your inbox. No spam.</p>
+        <div class="newsletter-wrap">
+          <input type="email" id="subscribeEmail" placeholder="your@email.com" autocomplete="email">
+          <button data-subscribe>&rarr;</button>
+        </div>
+        <div class="subscribe-status" id="subscribeSuccess"></div>
+      </div>
     </div>
   </footer>
 
-  <script src="js/compare.js" defer></script>
+  <div id="searchModalRoot"></div>
+  <script src="/js/utils.js"></script>
+  <script src="/js/search.js"></script>
+  <script src="/js/compare.js"></script>
 </body>
 </html>

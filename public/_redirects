@@ -1,3 +1,10 @@
+/tool/:slug /tool.html?slug=:slug 200
+/post/:slug /post.html?slug=:slug 200
+/category/:cat /category.html?cat=:cat 200
+/blog /blog.html 200
+/prompts /prompts.html 200
+/compare /compare.html 200
+/submit /submit.html 200
 /api/* https://ai-directory-worker.radwanislam648.workers.dev/api/:splat 200
 /og/* https://ai-directory-worker.radwanislam648.workers.dev/og/:splat 200
 /rss.xml https://ai-directory-worker.radwanislam648.workers.dev/rss.xml 200

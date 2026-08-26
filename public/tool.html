@@ -4,45 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Tool Detail - AI Directory</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800'>A</text></svg>">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="navbar-left">
-      <span class="navbar-dot"></span>
-      <a href="index.html" class="navbar-brand">AI Directory</a>
+      <a href="/" class="navbar-brand">
+        <span class="navbar-logo">A</span>
+        <span>AI Directory</span>
+      </a>
+    </div>
+    <div class="navbar-search">
+      <div class="search-bar" id="searchTrigger" role="button" tabindex="0">
+        <span class="search-icon">&#128269;</span>
+        <span>Search AI tools...</span>
+        <kbd>&#8984;K</kbd>
+      </div>
     </div>
     <div class="navbar-right">
-      <a href="submit.html" class="nav-link primary">Submit Tool</a>
-      <a href="blog.html" class="nav-link">Blog</a>
-      <a href="prompts.html" class="nav-link">Prompts</a>
+      <a href="/submit" class="nav-link primary">Submit Tool</a>
+      <a href="/blog" class="nav-link">Blog</a>
+      <a href="/prompts" class="nav-link">Prompts</a>
     </div>
   </nav>
 
   <div class="tool-layout">
     <main class="tool-main">
       <nav class="breadcrumb">
-        <a href="index.html">Home</a> &gt; <a href="#" id="bc-cat">Category</a> &gt; <span id="bc-tool">Tool</span>
+        <a href="/">Home</a><span class="sep">&rsaquo;</span><a href="#" id="bc-cat">Category</a><span class="sep">&rsaquo;</span><span id="bc-tool">Tool</span>
       </nav>
 
       <div class="tool-header">
         <div class="tool-screenshot" id="tool-screenshot-wrap">
           <img id="tool-screenshot" alt="Screenshot" hidden>
           <div class="screenshot-placeholder" id="screenshot-placeholder">
-            <span>No screenshot</span>
+            <span>No screenshot available</span>
           </div>
         </div>
         <div class="tool-info">
           <div class="tool-title-row">
-            <img id="tool-favicon" alt="" width="48" height="48">
+            <img id="tool-favicon" alt="" width="52" height="52">
             <h1 id="tool-name">Loading...</h1>
             <span id="tool-pricing-badge" class="pricing-badge"></span>
           </div>
-          <p id="tool-tagline" class="muted">Loading...</p>
+          <p id="tool-tagline">Loading...</p>
+          <div class="tool-tags" id="tool-tags"></div>
           <div class="tool-actions">
-            <button id="btn-save">❤ Save</button>
-            <a id="btn-visit" class="btn-primary" target="_blank" rel="noopener">Try Now ↗</a>
+            <button id="btn-save">&#9829; Save</button>
+            <a id="btn-visit" class="btn-primary" target="_blank" rel="noopener">Try Now &nearr;</a>
           </div>
         </div>
       </div>
@@ -59,14 +72,18 @@
 
       <section class="similar-section">
         <h3>Similar Tools</h3>
-        <div id="similar-tools" class="grid-3"></div>
+        <div id="similar-tools" class="grid-3">
+          <div class="skeleton" style="height:150px;"></div>
+          <div class="skeleton" style="height:150px;"></div>
+          <div class="skeleton" style="height:150px;"></div>
+        </div>
       </section>
     </main>
 
     <aside class="tool-sidebar">
       <div>
         <h4>Featured Tools</h4>
-        <div id="featured-tools-list"></div>
+        <div id="featured-tools-list"><div class="skeleton-line" style="height:14px;margin:6px;"></div></div>
       </div>
       <div>
         <h4>Top Categories</h4>
@@ -77,17 +94,36 @@
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="footer-title">AI Directory</div>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="blog.html">Blog</a>
-        <a href="prompts.html">Prompts</a>
-        <a href="submit.html">Submit Tool</a>
+      <div class="footer-brand">
+        <h3>AI Directory</h3>
+        <p>Discover the best AI tools, updated daily.</p>
+        <p class="copyright">&copy; 2026 AI Directory. All rights reserved.</p>
       </div>
-      <div class="footer-copy">© 2026 AI Directory</div>
+      <div class="footer-links">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/submit">Submit Tool</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/prompts">Prompts</a></li>
+          <li><a href="/rss.xml">RSS Feed</a></li>
+        </ul>
+      </div>
+      <div class="footer-newsletter">
+        <h4>Stay Updated</h4>
+        <p>New AI tools in your inbox. No spam.</p>
+        <div class="newsletter-wrap">
+          <input type="email" id="subscribeEmail" placeholder="your@email.com" autocomplete="email">
+          <button data-subscribe>&rarr;</button>
+        </div>
+        <div class="subscribe-status" id="subscribeSuccess"></div>
+      </div>
     </div>
   </footer>
 
-  <script src="js/tool.js" defer></script>
+  <div id="searchModalRoot"></div>
+  <script src="/js/utils.js"></script>
+  <script src="/js/search.js"></script>
+  <script src="/js/tool.js"></script>
 </body>
 </html>

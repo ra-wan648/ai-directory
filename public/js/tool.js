@@ -1,259 +1,190 @@
-const API = '';
+/* ═══════════════════════════════════════════════════
+   tool.js — tool detail page.
+   Fetches /api/tools/:slug (worker.js contract).
+   Depends on utils.js.
+   ═══════════════════════════════════════════════════ */
 
-const slug = new URLSearchParams(location.search).get('slug');
-let tool = null;
-let comments = [];
+(function initTool() {
+  const slug = new URLSearchParams(location.search).get('slug');
+  const nameEl = document.getElementById('tool-name');
+  if (!nameEl) return;
 
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
-
-function faviconFor(url, size = 32) {
-  try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
-  } catch (e) {
-    return '';
-  }
-}
-
-async function fetchJSON(url, opts) {
-  const res = await fetch(url, opts);
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json();
-}
-
-function pricingClass(pricing) {
-  const p = (pricing || '').toLowerCase();
-  if (p.includes('paid')) return 'paid';
-  if (p.includes('freemium')) return 'freemium';
-  return 'free';
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
   if (!slug) {
-    document.getElementById('tool-name').textContent = 'Missing slug';
+    nameEl.textContent = 'Missing tool';
     return;
   }
-  try {
-    const data = await fetchJSON(`${API}/api/tool/${encodeURIComponent(slug)}`);
-    tool = data.tool;
-    comments = data.comments || [];
-  } catch (e) {
-    document.getElementById('tool-name').textContent = 'Tool not found';
-    return;
-  }
-  populate(tool);
-  setupTabs(tool);
-  loadSidebar(tool);
-  loadSimilar(tool);
-});
 
-function populate(t) {
-  document.getElementById('tool-favicon').src = faviconFor(t.url, 48);
-  document.getElementById('tool-name').textContent = t.name;
-  document.title = `${t.name} - AI Directory`;
-
-  const badge = document.getElementById('tool-pricing-badge');
-  badge.textContent = t.pricing || 'free';
-  badge.className = `pricing-badge ${pricingClass(t.pricing)}`;
-
-  document.getElementById('tool-tagline').textContent = t.short_desc || t.description || '';
-
-  const visit = document.getElementById('btn-visit');
-  visit.href = t.visit_url || t.url || '#';
-
-  if (t.screenshot_url) {
-    document.getElementById('tool-screenshot').src = t.screenshot_url;
-    document.getElementById('tool-screenshot').hidden = false;
-    document.getElementById('screenshot-placeholder').style.display = 'none';
-  } else {
-    document.getElementById('tool-screenshot').hidden = true;
-    document.getElementById('screenshot-placeholder').style.display = 'flex';
+  async function load() {
+    try {
+      const data = await fetchJSON(`${API}/api/tools/${encodeURIComponent(slug)}`);
+      populate(data.tool);
+      setupTabs(data.tool);
+      loadSidebar(data.tool);
+      loadSimilar(data.tool, data.related);
+    } catch (e) {
+      nameEl.textContent = 'Tool not found';
+      document.getElementById('tool-tagline').textContent = 'This tool may have been removed.';
+    }
   }
 
-  document.getElementById('bc-cat').textContent = t.category || 'Category';
-  if (t.category) {
-    document.getElementById('bc-cat').href = `/category.html?cat=${encodeURIComponent(t.category)}`;
+  function populate(t) {
+    nameEl.textContent = t.name;
+    document.title = `${t.name} - AI Directory`;
+
+    const favicon = document.getElementById('tool-favicon');
+    favicon.src = faviconFor(t.url, 128);
+    favicon.onerror = () => { favicon.style.visibility = 'hidden'; };
+
+    const badge = document.getElementById('tool-pricing-badge');
+    badge.textContent = t.pricing || 'free';
+    badge.className = `pricing-badge ${pricingClass(t.pricing)}`;
+
+    document.getElementById('tool-tagline').textContent = t.short_desc || t.description || '';
+
+    const tags = String(t.tags || '').split(',').map(s => s.trim()).filter(Boolean);
+    document.getElementById('tool-tags').innerHTML = tags.map(tag =>
+      `<span class="tool-tag">${escapeHtml(tag)}</span>`).join('');
+
+    const visit = document.getElementById('btn-visit');
+    visit.href = t.url || '#';
+
+    if (t.screenshot_url) {
+      const shot = document.getElementById('tool-screenshot');
+      shot.src = t.screenshot_url;
+      shot.hidden = false;
+      document.getElementById('screenshot-placeholder').style.display = 'none';
+    }
+
+    const bcCat = document.getElementById('bc-cat');
+    bcCat.textContent = t.category || 'Category';
+    if (t.category) bcCat.href = `/category/${encodeURIComponent(t.category)}`;
+    document.getElementById('bc-tool').textContent = t.name;
+
+    /* Save (heart) button — localStorage backed */
+    const saveBtn = document.getElementById('btn-save');
+    const refreshSave = () => {
+      const saved = isToolSaved(t.slug);
+      saveBtn.classList.toggle('saved', saved);
+      saveBtn.textContent = saved ? '❤ Saved' : '❤ Save';
+    };
+    refreshSave();
+    saveBtn.addEventListener('click', () => {
+      toggleSavedTool(t.slug);
+      refreshSave();
+    });
   }
-  document.getElementById('bc-tool').textContent = t.name;
 
-  document.getElementById('btn-save').addEventListener('click', function () {
-    this.classList.toggle('saved');
-    this.textContent = this.classList.contains('saved') ? '❤ Saved' : '❤ Save';
-  });
-}
-
-function setupTabs(t) {
-  document.querySelectorAll('.tab-bar button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  function setupTabs(t) {
+    const bar = document.querySelector('.tab-bar');
+    bar.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      bar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       renderTab(btn.dataset.tab, t);
     });
-  });
-  renderTab('overview', t);
-}
-
-async function renderTab(tab, t) {
-  const el = document.getElementById('tab-content');
-  if (tab === 'overview') {
-    el.innerHTML = `<div>${escapeHtml(t.description_full || t.description || 'No description.')}</div>`;
-  } else if (tab === 'pricing') {
-    el.innerHTML = `<div>${escapeHtml(t.pricing_detail || t.pricing || 'No pricing details.')}</div>`;
-  } else if (tab === 'features') {
-    el.innerHTML = renderFeatures(t.features);
-  } else if (tab === 'usecases') {
-    el.innerHTML = `<p>Suitable for users looking to handle ${escapeHtml(t.category || 'various')} tasks.</p>`;
-  } else if (tab === 'alternatives') {
-    el.innerHTML = '<p>Loading alternatives...</p>';
-    await renderAlternatives(t);
-  } else if (tab === 'discussions') {
-    el.innerHTML = renderDiscussions(t);
-    setupCommentForm(t);
+    renderTab('overview', t);
   }
-}
 
-function renderFeatures(features) {
-  if (!features) return '<p>No features listed.</p>';
-  let list = [];
-  try {
-    const parsed = JSON.parse(features);
-    if (Array.isArray(parsed)) {
-      list = parsed.filter(x => x).map(x => typeof x === 'object' ? Object.values(x)[0] : x);
+  async function renderTab(tab, t) {
+    const el = document.getElementById('tab-content');
+    if (tab === 'overview') {
+      el.innerHTML = `<div>${escapeHtml(t.description || t.short_desc || 'No description available.')}</div>`;
+    } else if (tab === 'pricing') {
+      if (t.pricing_detail) {
+        el.innerHTML = `<div>${escapeHtml(t.pricing_detail)}</div>`;
+      } else {
+        const price = t.pricing || 'free';
+        el.innerHTML = `<p>This tool is available on a <strong>${escapeHtml(price)}</strong> plan. Visit the official website for current pricing details.</p>`;
+      }
+    } else if (tab === 'features') {
+      el.innerHTML = renderFeatures(t);
+    } else if (tab === 'usecases') {
+      el.innerHTML = `<p>Suitable for users looking to handle ${escapeHtml(t.category || 'various')} tasks. Try it out and see how it fits into your workflow.</p>`;
+    } else if (tab === 'alternatives') {
+      el.innerHTML = '<p>Loading alternatives...</p>';
+      await renderAlternatives(t);
+    } else if (tab === 'discussions') {
+      el.innerHTML = `
+        <h3>Discussions</h3>
+        <p>Comments are not enabled for this tool yet. In the meantime, check out the reviews and alternatives above.</p>`;
     }
-  } catch (e) {
-    list = [features];
   }
-  if (!list.length) return '<p>No features listed.</p>';
-  return `<ul>${list.map(f => `<li>${escapeHtml(String(f))}</li>`).join('')}</ul>`;
-}
 
-async function renderAlternatives(t) {
-  const el = document.getElementById('tab-content');
-  try {
-    const data = await fetchJSON(`${API}/api/tools?category=${encodeURIComponent(t.category)}&limit=6`);
-    const alts = (data.tools || []).filter(x => x.slug !== t.slug);
-    if (!alts.length) {
-      el.innerHTML = '<p>No alternatives found.</p>';
-      return;
+  function renderFeatures(t) {
+    let list = [];
+    if (t.features) {
+      try {
+        const parsed = JSON.parse(t.features);
+        if (Array.isArray(parsed)) {
+          list = parsed.filter(Boolean).map(x => typeof x === 'object' ? Object.values(x)[0] : x);
+        }
+      } catch (e) {
+        list = [];
+      }
     }
-    el.innerHTML = `
-      <div class="grid-3">
-        ${alts.map(a => `
-          <div class="tool-card">
-            <div class="tool-card-top">
-              <img src="${faviconFor(a.url, 32)}" alt="" loading="lazy">
-              <span class="tool-name">${escapeHtml(a.name)}</span>
-            </div>
-            <span class="pricing-badge ${pricingClass(a.pricing)}">${escapeHtml(a.pricing || 'free')}</span>
-            <p class="tool-desc">${escapeHtml(a.description || '')}</p>
-            <div class="tool-card-footer">
-              <a class="visit-link" href="/tool.html?slug=${encodeURIComponent(a.slug)}">View →</a>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  } catch (e) {
-    el.innerHTML = '<p>Failed to load alternatives.</p>';
+    if (!list.length) {
+      list = String(t.tags || '').split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (!list.length) return '<p>No features listed.</p>';
+    return `<ul>${list.map(f => `<li>${escapeHtml(String(f))}</li>`).join('')}</ul>`;
   }
-}
 
-function renderDiscussions(t) {
-  const items = (comments || []).map(c => `
-    <div class="comment-item">
-      <div class="author">${escapeHtml(c.name)}</div>
-      <div class="body">${escapeHtml(c.comment)}</div>
-      <div class="time">${escapeHtml(c.created_at || '')}</div>
-    </div>
-  `).join('');
-
-  return `
-    <h3>Discussions</h3>
-    <form id="comment-form" class="comment-form">
-      <input type="text" id="comment-name" placeholder="Your name" required>
-      <textarea id="comment-text" placeholder="Share your thoughts..." required></textarea>
-      <button class="btn-primary" type="submit">Submit</button>
-    </form>
-    <div id="comments-list">
-      ${items || '<p class="muted">No comments yet. Be the first!</p>'}
-    </div>
-  `;
-}
-
-function setupCommentForm(t) {
-  const form = document.getElementById('comment-form');
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const name = document.getElementById('comment-name').value.trim();
-    const comment = document.getElementById('comment-text').value.trim();
-    if (!name || !comment) return;
+  async function renderAlternatives(t) {
+    const el = document.getElementById('tab-content');
     try {
-      await fetchJSON(`${API}/api/comment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tool_slug: t.slug, name, comment })
-      });
-      form.reset();
-      const data = await fetchJSON(`${API}/api/comments/${encodeURIComponent(t.slug)}`);
-      comments = data.comments || [];
-      renderTab('discussions', t);
-    } catch (err) {
-      alert('Failed to post comment.');
+      const data = await fetchJSON(`${API}/api/tools?category=${encodeURIComponent(t.category || '')}&limit=6`);
+      const alts = (data.tools || []).filter(x => x.slug !== t.slug);
+      if (!alts.length) {
+        el.innerHTML = '<p>No alternatives found.</p>';
+        return;
+      }
+      const grid = document.createElement('div');
+      grid.className = 'grid-3';
+      alts.forEach(a => grid.insertAdjacentHTML('beforeend', renderToolCard(a)));
+      bindCardClicks(grid);
+      el.innerHTML = '';
+      el.appendChild(grid);
+    } catch (e) {
+      el.innerHTML = '<p>Failed to load alternatives.</p>';
     }
-  });
-}
-
-async function loadSidebar(t) {
-  try {
-    const feat = await fetchJSON(`${API}/api/tools?filter=featured&limit=4`);
-    document.getElementById('featured-tools-list').innerHTML = (feat.tools || []).map(f => `
-      <a class="featured-tool" href="/tool.html?slug=${encodeURIComponent(f.slug)}">
-        <img src="${faviconFor(f.url, 24)}" alt="" loading="lazy">
-        <span>${escapeHtml(f.name)}</span>
-      </a>
-    `).join('');
-  } catch (e) {
-    document.getElementById('featured-tools-list').innerHTML = '<p class="muted">None.</p>';
   }
 
-  try {
-    const cats = await fetchJSON(`${API}/api/categories`);
-    const top = cats.slice(0, 8);
-    document.getElementById('top-categories-pills').innerHTML = top.map(c => `
-      <a class="top-cat-pill" href="/category.html?cat=${encodeURIComponent(c.category)}">${escapeHtml(c.category)}</a>
-    `).join('');
-  } catch (e) {
-    /* noop */
-  }
-}
+  async function loadSidebar(t) {
+    const featuredEl = document.getElementById('featured-tools-list');
+    try {
+      const data = await fetchJSON(`${API}/api/tools/featured`);
+      const tools = data.tools || [];
+      featuredEl.innerHTML = tools.map(f => `
+        <a class="featured-tool" href="/tool/${encodeURIComponent(f.slug)}">
+          <img src="${faviconFor(f.url, 64)}" alt="" loading="lazy">
+          <span>${escapeHtml(f.name)}</span>
+        </a>`).join('') || '<p class="muted">None.</p>';
+    } catch (e) {
+      featuredEl.innerHTML = '<p class="muted">None.</p>';
+    }
 
-async function loadSimilar(t) {
-  const el = document.getElementById('similar-tools');
-  try {
-    const data = await fetchJSON(`${API}/api/tools?category=${encodeURIComponent(t.category)}&limit=6`);
-    const sim = (data.tools || []).filter(x => x.slug !== t.slug).slice(0, 3);
+    const catsEl = document.getElementById('top-categories-pills');
+    try {
+      const data = await fetchJSON(`${API}/api/categories`);
+      const top = (data.categories || []).slice(0, 8);
+      catsEl.innerHTML = top.map(c => `
+        <a class="top-cat-pill" href="/category/${encodeURIComponent(c.category)}">${escapeHtml(c.category)}</a>`).join('');
+    } catch (e) {
+      catsEl.innerHTML = '';
+    }
+  }
+
+  function loadSimilar(t, related) {
+    const el = document.getElementById('similar-tools');
+    const sim = (related || []).filter(x => x.slug !== t.slug).slice(0, 3);
     if (!sim.length) {
       el.innerHTML = '<p class="muted">No similar tools.</p>';
       return;
     }
-    el.innerHTML = sim.map(s => `
-      <div class="tool-card">
-        <div class="tool-card-top">
-          <img src="${faviconFor(s.url, 32)}" alt="" loading="lazy">
-          <span class="tool-name">${escapeHtml(s.name)}</span>
-        </div>
-        <span class="pricing-badge ${pricingClass(s.pricing)}">${escapeHtml(s.pricing || 'free')}</span>
-        <p class="tool-desc">${escapeHtml(s.description || '')}</p>
-        <div class="tool-card-footer">
-          <a class="visit-link" href="/tool.html?slug=${encodeURIComponent(s.slug)}">View →</a>
-        </div>
-      </div>
-    `).join('');
-  } catch (e) {
-    el.innerHTML = '<p class="muted">Failed to load similar tools.</p>';
+    el.innerHTML = sim.map(s => renderToolCard(s)).join('');
+    bindCardClicks(el);
   }
-}
+
+  load();
+})();

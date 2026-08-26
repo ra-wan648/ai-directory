@@ -1,44 +1,22 @@
-/* Blog and post pages */
+/* ═══════════════════════════════════════════════════
+   blog.js — blog listing (/blog) + post page (/post/:slug).
+   Depends on utils.js.
+   ═══════════════════════════════════════════════════ */
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr.replace(' ', 'T'));
-  if (isNaN(d)) return '';
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function readTime(content) {
-  const words = String(content || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-function categoryClass(cat) {
-  return ['review', 'tutorial', 'news'].includes(cat) ? cat : 'review';
-}
-
-/* ─────────── BLOG LISTING (blog.html) ─────────── */
+/* ─────────── BLOG LISTING ─────────── */
 (function initBlogPage() {
-  if (!document.getElementById('blogGrid')) return;
-
   const grid = document.getElementById('blogGrid');
+  if (!grid) return;
+
   const pagination = document.getElementById('pagination');
   let activeTab = 'all';
   let currentPage = 1;
 
   function renderBlogCard(b) {
+    const catClass = ['review', 'tutorial', 'news'].includes(b.category) ? b.category : 'review';
     return `
       <div class="blog-card" data-slug="${escapeHtml(b.slug)}">
-        <div class="blog-eyebrow ${categoryClass(b.category)}">${escapeHtml(b.category)}</div>
+        <div class="blog-eyebrow ${catClass}">${escapeHtml(b.category || 'post')}</div>
         <div class="blog-title">${escapeHtml(b.title)}</div>
         <div class="blog-meta">${formatDate(b.published_at)} · ${readTime(b.content)} min read</div>
       </div>`;
@@ -48,23 +26,20 @@ function categoryClass(cat) {
     currentPage = page;
     grid.innerHTML = '<div class="skeleton" style="height:140px;"></div>'.repeat(3);
     try {
-      const url = `/api/blogs?category=${encodeURIComponent(activeTab)}&page=${page}&limit=12`;
-      const data = await (await fetch(url)).json();
+      const data = await fetchJSON(`${API}/api/blogs?category=${encodeURIComponent(activeTab)}&page=${page}&limit=12`);
       const blogs = data.blogs || [];
       grid.innerHTML = '';
-      if (blogs.length === 0) {
+      if (!blogs.length) {
         grid.innerHTML = '<div class="empty-state" style="padding:30px;">No posts yet</div>';
         pagination.innerHTML = '';
         return;
       }
       blogs.forEach(b => grid.insertAdjacentHTML('beforeend', renderBlogCard(b)));
-
       grid.querySelectorAll('.blog-card').forEach(card => {
         card.addEventListener('click', () => {
-          window.location.href = `post.html?slug=${encodeURIComponent(card.dataset.slug)}`;
+          window.location.href = `/post/${encodeURIComponent(card.dataset.slug)}`;
         });
       });
-
       renderPagination(data.total || 0, page);
     } catch (e) {
       grid.innerHTML = '<div class="empty-state">Failed to load posts.</div>';
@@ -75,9 +50,9 @@ function categoryClass(cat) {
   function renderPagination(total, page) {
     const totalPages = Math.max(1, Math.ceil(total / 12));
     pagination.innerHTML = `
-      <button class="btn" id="prevBtn" ${page <= 1 ? 'disabled' : ''}>← Prev</button>
+      <button class="btn btn-ghost" id="prevBtn" ${page <= 1 ? 'disabled' : ''}>&larr; Prev</button>
       <span>Page ${page} of ${totalPages}</span>
-      <button class="btn" id="nextBtn" ${page >= totalPages ? 'disabled' : ''}>Next →</button>`;
+      <button class="btn btn-ghost" id="nextBtn" ${page >= totalPages ? 'disabled' : ''}>Next &rarr;</button>`;
 
     document.getElementById('prevBtn').addEventListener('click', () => {
       if (currentPage > 1) {
@@ -93,42 +68,35 @@ function categoryClass(cat) {
     });
   }
 
-  function setupTabs() {
-    document.querySelectorAll('[data-blog-tab]').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('[data-blog-tab]').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        activeTab = tab.dataset.blogTab;
-        fetchBlogs(1);
-      });
+  document.querySelectorAll('[data-blog-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-blog-tab]').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.dataset.blogTab;
+      fetchBlogs(1);
     });
-  }
+  });
 
-  setupTabs();
   fetchBlogs(1);
+  setupNewsletter();
 })();
 
-/* ─────────── POST PAGE (post.html) ─────────── */
+/* ─────────── POST PAGE ─────────── */
 (function initPostPage() {
-  if (!document.getElementById('postArticle')) return;
+  const article = document.getElementById('postArticle');
+  if (!article) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get('slug');
+  const slug = new URLSearchParams(location.search).get('slug');
   if (!slug) {
-    document.getElementById('postArticle').innerHTML = '<div class="empty-state">No post specified.</div>';
+    article.innerHTML = '<div class="empty-state">No post specified.</div>';
     return;
   }
 
   const breadcrumb = document.getElementById('breadcrumb');
-  const article = document.getElementById('postArticle');
 
-  function injectJSONLD(blog) {
+  function injectJSONLD(faqSchema) {
     let schema = null;
-    try {
-      schema = blog.faq_schema ? JSON.parse(blog.faq_schema) : null;
-    } catch (e) {
-      schema = null;
-    }
+    try { schema = faqSchema ? JSON.parse(faqSchema) : null; } catch (e) { schema = null; }
     if (schema && Array.isArray(schema) && schema.length) {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
@@ -147,21 +115,19 @@ function categoryClass(cat) {
 
   function renderFAQ(items) {
     if (!items || !items.length) return '';
-    const faqItems = items.map((item, i) => `
-      <div class="faq-item" data-faq>
-        <button class="faq-q">
-          <span class="faq-icon">▶</span>
-          <span>${escapeHtml(item.q)}</span>
-        </button>
-        <div class="faq-a">
-          <div class="faq-a-inner">${escapeHtml(item.a)}</div>
-        </div>
-      </div>`).join('');
-
     return `
       <div class="faq-section">
         <h2>Frequently Asked Questions</h2>
-        ${faqItems}
+        ${items.map((item, i) => `
+          <div class="faq-item" data-faq>
+            <button class="faq-q">
+              <span class="faq-icon">&#9654;</span>
+              <span>${escapeHtml(item.q)}</span>
+            </button>
+            <div class="faq-a">
+              <div class="faq-a-inner">${escapeHtml(item.a)}</div>
+            </div>
+          </div>`).join('')}
       </div>`;
   }
 
@@ -180,23 +146,26 @@ function categoryClass(cat) {
     const box = document.getElementById('relatedToolBox');
     if (!box || !toolSlug) return;
     try {
-      const data = await (await fetch(`/api/tools/${encodeURIComponent(toolSlug)}`)).json();
+      const data = await fetchJSON(`${API}/api/tools/${encodeURIComponent(toolSlug)}`);
       const tool = data.tool;
       if (!tool) { box.innerHTML = ''; return; }
-      const domain = (() => { try { return new URL(tool.url).hostname; } catch (e) { return ''; } })();
+      const domain = getDomain(tool.url);
       const logo = domain
-        ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64" alt="" style="width:18px;height:18px;border-radius:3px;">`
-        : '<span>🤖</span>';
+        ? `<img src="${faviconFor(tool.url, 64)}" alt="" style="width:26px;height:26px;border-radius:6px;">`
+        : `<span style="font-size:20px">${categoryEmoji(tool.category)}</span>`;
       box.innerHTML = `
-        <div class="tool-card" style="height:auto;min-height:110px;" onclick="location.href='tool.html?slug=${encodeURIComponent(tool.slug)}'">
+        <div class="tool-card" style="cursor:pointer;height:auto;min-height:120px;" data-slug="${escapeHtml(tool.slug)}">
           <div class="tool-card-top">
             ${logo}
             <span class="tool-card-name">${escapeHtml(tool.name)}</span>
-            <span class="badge badge-${escapeHtml(tool.pricing)}">${escapeHtml(tool.pricing)}</span>
+            ${pricingBadge(tool.pricing)}
           </div>
-          <div class="tool-card-desc" style="line-clamp:2;">${escapeHtml(tool.short_desc || tool.description || '')}</div>
-          <div class="tool-card-visit">Visit ↗</div>
+          <div class="tool-card-desc">${escapeHtml(tool.short_desc || tool.description || '')}</div>
+          <div class="tool-card-bottom">
+            <span class="tool-card-visit">View Tool &nearr;</span>
+          </div>
         </div>`;
+      bindCardClicks(box);
     } catch (e) {
       box.innerHTML = '';
     }
@@ -205,7 +174,7 @@ function categoryClass(cat) {
   async function fetchPost(slug) {
     article.innerHTML = '<div class="empty-state" style="padding:40px;"><span class="loader-spinner"></span> Loading...</div>';
     try {
-      const data = await (await fetch(`/api/blogs/${encodeURIComponent(slug)}`)).json();
+      const data = await fetchJSON(`${API}/api/blogs/${encodeURIComponent(slug)}`);
       const blog = data.blog;
       if (!blog) {
         article.innerHTML = '<div class="empty-state">Post not found.</div>';
@@ -223,24 +192,19 @@ function categoryClass(cat) {
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc && blog.meta_description) metaDesc.setAttribute('content', blog.meta_description);
 
-    injectJSONLD(blog);
+    injectJSONLD(blog.faq_schema);
 
     if (breadcrumb) {
-      breadcrumb.innerHTML = `<a href="index.html">Home</a><span class="sep">›</span><a href="blog.html">Blog</a><span class="sep">›</span><span>${escapeHtml(blog.title)}</span>`;
+      breadcrumb.innerHTML = `<a href="/">Home</a><span class="sep">&rsaquo;</span><a href="/blog">Blog</a><span class="sep">&rsaquo;</span><span>${escapeHtml(blog.title)}</span>`;
     }
 
-    let faqHtml = '';
     let faqItems = [];
-    try {
-      faqItems = blog.faq_schema ? JSON.parse(blog.faq_schema) : [];
-    } catch (e) {
-      faqItems = [];
-    }
-    faqHtml = renderFAQ(faqItems);
+    try { faqItems = blog.faq_schema ? JSON.parse(blog.faq_schema) : []; } catch (e) { faqItems = []; }
 
+    const catClass = ['review', 'tutorial', 'news'].includes(blog.category) ? blog.category : 'review';
     article.innerHTML = `
       <div class="post-header">
-        <span class="blog-eyebrow ${categoryClass(blog.category)}">${escapeHtml(blog.category)}</span>
+        <span class="blog-eyebrow ${catClass}">${escapeHtml(blog.category || 'post')}</span>
         <h1 class="post-title">${escapeHtml(blog.title)}</h1>
         <div class="post-meta">
           <span>${formatDate(blog.published_at)}</span>
@@ -250,7 +214,7 @@ function categoryClass(cat) {
         </div>
       </div>
       <article class="prose">${blog.content || ''}</article>
-      ${faqHtml}`;
+      ${renderFAQ(faqItems)}`;
 
     setupAccordion();
     fetchRelatedTool(blog.tool_slug);

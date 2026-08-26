@@ -1,112 +1,14 @@
-/* Shared helpers */
-const API = '';
-
-function getDomain(url) {
-  try {
-    const u = new URL(url);
-    return u.hostname;
-  } catch (e) {
-    return '';
-  }
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function pricingBadge(pricing) {
-  if (!pricing) return '';
-  return `<span class="badge badge-${escapeHtml(pricing)}">${escapeHtml(pricing)}</span>`;
-}
-
-const CATEGORY_EMOJIS = {
-  'Writing': '✍️', 'Coding': '💻', 'Image': '🎨', 'Video': '🎬',
-  'Marketing': '📣', 'Productivity': '⚡', 'Research': '🔍', 'Audio': '🎵',
-  'Chat': '💬', 'Business': '💼', 'Automation': '🤖', 'Analytics': '📊'
-};
-
-function categoryEmoji(category) {
-  return CATEGORY_EMOJIS[category] || '🤖';
-}
-
-const CATEGORY_COLORS = {
-  'Writing': '#22c55e', 'Coding': '#22c55e', 'Image': '#22c55e', 'Video': '#22c55e',
-  'Marketing': '#22c55e', 'Productivity': '#22c55e', 'Research': '#22c55e', 'Audio': '#22c55e',
-  'Chat': '#22c55e', 'Business': '#22c55e', 'Automation': '#22c55e', 'Analytics': '#22c55e'
-};
-
-function toolLogo(tool, size = 18) {
-  const domain = getDomain(tool.url);
-  const cat = tool.category || '';
-
-  if (tool.logo_url) {
-    return `<img class="tool-card-logo" style="width:${size}px;height:${size}px;" src="${escapeHtml(tool.logo_url)}" alt="" loading="lazy" onerror="this.style.display='none'">`;
-  }
-  if (domain && domain.includes('huggingface.co')) {
-    return `<span class="hf-badge">🤗 HF</span>`;
-  }
-  if (domain) {
-    return `<img class="tool-card-logo" style="width:${size}px;height:${size}px;" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64" alt="" loading="lazy" onerror="this.style.display='none'">`;
-  }
-  const color = CATEGORY_COLORS[cat] || '#22c55e';
-  return `<div class="logo-circle" style="width:${size * 1.4}px;height:${size * 1.4}px;font-size:${Math.round(size * 0.8)}px;background:${color}22;">${categoryEmoji(cat)}</div>`;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr.replace(' ', 'T'));
-  if (isNaN(d)) return '';
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function readTime(content) {
-  const words = String(content || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
-}
-
-async function fetchJSON(url, options) {
-  const res = await fetch(url, options);
-  return res.json();
-}
-
-/* Card renderer (shared) */
-function renderToolCard(tool) {
-  return `
-    <div class="tool-card" data-slug="${escapeHtml(tool.slug)}" data-url="${escapeHtml(tool.url || '')}">
-      <div class="tool-card-top">
-        ${toolLogo(tool)}
-        <span class="tool-card-name">${escapeHtml(tool.name)}</span>
-        ${pricingBadge(tool.pricing)}
-      </div>
-      <div class="tool-card-cat">${categoryEmoji(tool.category)} ${escapeHtml(tool.category || '')}</div>
-      <div class="tool-card-desc">${escapeHtml(tool.short_desc || tool.description || '')}</div>
-      <div class="tool-card-visit">Visit ↗</div>
-    </div>`;
-}
-
-function skeletonCard() {
-  return `
-    <div class="skeleton">
-      <div class="skeleton-line l1"></div>
-      <div class="skeleton-line l2"></div>
-      <div class="skeleton-line l3"></div>
-      <div class="skeleton-line l4"></div>
-      <div class="skeleton-line l5"></div>
-    </div>`;
-}
-
-/* ───────────────────────────
-   INDEX PAGE LOGIC
-─────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   main.js — index page logic.
+   Depends on utils.js (API, fetchJSON, renderToolCard, ...).
+   ═══════════════════════════════════════════════════ */
 
 (function initIndex() {
-  if (!document.getElementById('toolGrid')) return;
+  const toolGrid = document.getElementById('toolGrid');
+  const emptyState = document.getElementById('emptyState');
+  const sentinel = document.getElementById('sentinel');
+
+  if (!toolGrid) return;
 
   const state = {
     page: 1,
@@ -115,10 +17,7 @@ function skeletonCard() {
     hasMore: true
   };
 
-  const toolGrid = document.getElementById('toolGrid');
-  const sentinel = document.getElementById('sentinel');
-  const emptyState = document.getElementById('emptyState');
-
+  /* ── URL sync ── */
   function updateURL() {
     const params = new URLSearchParams();
     const f = state.filters;
@@ -126,7 +25,7 @@ function skeletonCard() {
     if (f.pricing) params.set('pricing', f.pricing);
     if (f.tag) params.set('tag', f.tag);
     const qs = params.toString();
-    history.pushState({}, '', qs ? '?' + qs : window.location.pathname);
+    history.replaceState({}, '', qs ? '?' + qs : window.location.pathname);
   }
 
   function buildQuery(page) {
@@ -140,9 +39,11 @@ function skeletonCard() {
     return params.toString();
   }
 
+  /* ── Tool grid + infinite scroll ── */
   async function fetchTools(page, append = false) {
     if (state.loading) return;
     state.loading = true;
+
     if (!append) {
       toolGrid.innerHTML = skeletonCard().repeat(8);
       emptyState.style.display = 'none';
@@ -159,20 +60,14 @@ function skeletonCard() {
       if (!append) toolGrid.innerHTML = '';
       const tools = data.tools || [];
       tools.forEach(t => toolGrid.insertAdjacentHTML('beforeend', renderToolCard(t)));
+      bindCardClicks(toolGrid);
 
-      if (!append) {
-        const total = data.total || 0;
-        const loaded = page * 40;
-        state.hasMore = loaded < total && tools.length > 0;
-        if (!state.hasMore) sentinel.style.display = 'none';
-        else sentinel.style.display = 'flex';
-        if (tools.length === 0) emptyState.style.display = 'block';
-      } else {
-        toolGrid.querySelectorAll('.grid-load').forEach(el => el.remove());
-        state.hasMore = tools.length === 40;
-      }
+      const total = data.total || 0;
+      const loaded = page * 40;
+      state.hasMore = loaded < total && tools.length > 0;
+      sentinel.style.display = state.hasMore ? 'flex' : 'none';
+      if (tools.length === 0 && !append) emptyState.style.display = 'block';
       state.page = page;
-      bindCardClicks();
     } catch (e) {
       if (!append) {
         toolGrid.innerHTML = '';
@@ -183,102 +78,105 @@ function skeletonCard() {
     state.loading = false;
   }
 
-  function bindCardClicks() {
-    toolGrid.querySelectorAll('.tool-card').forEach(card => {
-      card.onclick = () => {
-        const slug = card.dataset.slug;
-        if (slug) window.location.href = `tool.html?slug=${encodeURIComponent(slug)}`;
-      };
-    });
-  }
-
-  function applyFilter(key, val) {
-    if (key === 'blog') {
-      const blogTabs = document.querySelectorAll('[data-blog-tab]');
-      blogTabs.forEach(t => t.classList.toggle('active', t.dataset.blogTab === val));
-      fetchBlogs(val);
-      return;
-    }
-    if (key === 'reset') {
-      state.filters = {};
-    } else if (val) {
-      state.filters[key] = val;
-    } else {
-      delete state.filters[key];
-    }
-
-    document.querySelectorAll('.filter-pill').forEach(pill => {
-      const isBlog = pill.hasAttribute('data-blog-tab');
-      if (isBlog) return;
-      const pillKey = pill.dataset.key;
-      const pillVal = pill.dataset.val;
-      const active = pillKey === 'reset'
-        ? Object.keys(state.filters).length === 0
-        : state.filters[pillKey] === pillVal;
-      pill.classList.toggle('active', active);
-    });
-    document.querySelectorAll('.sidebar-item').forEach(item => {
-      const k = item.dataset.filterKey;
-      const v = item.dataset.filterVal;
-      item.classList.toggle('active', state.filters[k] === v);
-    });
-    updateURL();
-    fetchTools(1, false);
-  }
-
-  /* Setup filter pills */
-  document.querySelectorAll('.filter-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      applyFilter(pill.dataset.key, pill.dataset.val);
-    });
-  });
-
-  /* Setup sidebar filters */
-  document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', () => {
-      applyFilter(item.dataset.filterKey, item.dataset.filterVal);
-    });
-  });
-
-  /* Infinite scroll */
   function setupInfiniteScroll() {
     if (!('IntersectionObserver' in window)) return;
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && state.hasMore && !state.loading) {
         fetchTools(state.page + 1, true);
       }
-    }, { rootMargin: '200px' });
+    }, { rootMargin: '300px' });
     observer.observe(sentinel);
   }
 
-  /* Stats */
+  /* ── Filters ── */
+  function applyFilter(key, val) {
+    if (key === 'reset') state.filters = {};
+    else if (val) state.filters[key] = val;
+    else delete state.filters[key];
+
+    document.querySelectorAll('.filter-row .filter-pill').forEach(pill => {
+      const k = pill.dataset.key;
+      const v = pill.dataset.val;
+      const active = k === 'reset'
+        ? Object.keys(state.filters).length === 0
+        : state.filters[k] === v;
+      pill.classList.toggle('active', active);
+    });
+
+    document.querySelectorAll('.sidebar-item[data-filter-key]').forEach(item => {
+      item.classList.toggle('active', state.filters[item.dataset.filterKey] === item.dataset.filterVal);
+    });
+
+    updateURL();
+    fetchTools(1, false);
+  }
+
+  document.querySelectorAll('.filter-row .filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => applyFilter(pill.dataset.key, pill.dataset.val));
+  });
+
+  /* ── Sidebar: categories ── */
+  async function fetchCategories() {
+    const el = document.getElementById('sidebarCategories');
+    try {
+      const data = await fetchJSON(`${API}/api/categories`);
+      const cats = data.categories || [];
+      el.innerHTML = cats.map(c => `
+        <a class="sidebar-item" href="/category/${encodeURIComponent(c.category)}">
+          <span class="item-label"><span>${categoryEmoji(c.category)}</span><span>${escapeHtml(c.category)}</span></span>
+          <span class="count">${c.tool_count || 0}</span>
+        </a>`).join('') || '<div class="sidebar-header">No categories yet</div>';
+    } catch (e) {
+      el.innerHTML = '<div class="sidebar-header">Failed to load categories</div>';
+    }
+  }
+
+  /* ── Sidebar: latest prompts ── */
+  async function fetchSidebarPrompts() {
+    const el = document.getElementById('sidebarPrompts');
+    try {
+      const data = await fetchJSON(`${API}/api/prompts?limit=3`);
+      const prompts = data.prompts || [];
+      el.innerHTML = prompts.map(p => `
+        <a class="sidebar-prompt" href="/prompts">${escapeHtml(p.title)}</a>`).join('') ||
+        '<div class="sidebar-header">No prompts yet</div>';
+    } catch (e) {
+      el.innerHTML = '';
+    }
+  }
+
+  /* ── Stats ── */
   async function fetchStats() {
     try {
       const data = await fetchJSON(`${API}/api/stats`);
       document.getElementById('statTools').textContent = data.total_tools || 0;
       document.getElementById('statCategories').textContent = data.total_categories || 0;
       document.getElementById('statToday').textContent = data.today_added || 0;
-      document.getElementById('footerStats') && (document.getElementById('footerStats').innerHTML = `<strong>${data.total_tools || 0}</strong>+ tools · Updated every 6hrs`);
-    } catch (e) {}
+    } catch (e) { /* best-effort */ }
   }
 
-  /* New today */
+  /* ── New today strip ── */
   async function fetchNewToday() {
     const strip = document.getElementById('newTodayStrip');
     try {
       const data = await fetchJSON(`${API}/api/tools/new`);
       const tools = data.tools || [];
       strip.innerHTML = '';
-      if (tools.length === 0) strip.innerHTML = '<div class="empty-state" style="padding:10px;">No new tools today</div>';
+      if (!tools.length) {
+        strip.innerHTML = '<div class="empty-state" style="padding:14px;">No new tools today</div>';
+        return;
+      }
       tools.forEach(t => {
         const domain = getDomain(t.url);
         const div = document.createElement('div');
         div.className = 'mini-card';
         const img = domain
-          ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64" alt="" onerror="this.style.display='none'">`
-          : `<span>${categoryEmoji(t.category)}</span>`;
-        div.innerHTML = `${img}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;">${escapeHtml(t.name)}</span>${pricingBadge(t.pricing)}`;
-        div.onclick = () => window.location.href = `tool.html?slug=${encodeURIComponent(t.slug)}`;
+          ? `<img src="${faviconFor(t.url, 64)}" alt="" onerror="this.style.display='none'">`
+          : `<span style="font-size:16px">${categoryEmoji(t.category)}</span>`;
+        div.innerHTML = `${img}<span class="mini-name">${escapeHtml(t.name)}</span>${pricingBadge(t.pricing)}`;
+        div.addEventListener('click', () => {
+          window.location.href = `/tool/${encodeURIComponent(t.slug)}`;
+        });
         strip.appendChild(div);
       });
     } catch (e) {
@@ -286,56 +184,14 @@ function skeletonCard() {
     }
   }
 
-  /* Sidebar categories */
-  async function fetchCategories() {
-    const el = document.getElementById('sidebarCategories');
-    try {
-      const data = await fetchJSON(`${API}/api/categories`);
-      const cats = data.categories || [];
-      el.innerHTML = '';
-      cats.forEach(c => {
-        const name = c.name || c.category || '';
-        const slug = (c.slug || name.toLowerCase().replace(/\s+/g, '-'));
-        const count = c.tool_count || c.c || 0;
-        const btn = document.createElement('button');
-        btn.className = 'sidebar-item';
-        btn.dataset.filterKey = 'category';
-        btn.dataset.filterVal = slug;
-        btn.innerHTML = `<span>${escapeHtml(c.icon || categoryEmoji(name))}</span><span class="cat-name">${escapeHtml(name)}</span><span class="count">${count}</span>`;
-        btn.addEventListener('click', () => applyFilter('category', slug));
-        el.appendChild(btn);
-      });
-    } catch (e) {
-      el.innerHTML = '<div style="color:var(--text-3);font-size:12px;">Failed to load</div>';
-    }
-  }
-
-  /* Sidebar prompts */
-  async function fetchSidebarPrompts() {
-    const el = document.getElementById('sidebarPrompts');
-    try {
-      const data = await fetchJSON(`${API}/api/prompts?limit=3`);
-      const prompts = data.prompts || [];
-      el.innerHTML = '';
-      prompts.forEach(p => {
-        const a = document.createElement('a');
-        a.className = 'sidebar-prompt-title';
-        a.href = `prompts.html?p=${encodeURIComponent(p.slug)}`;
-        a.textContent = p.title;
-        el.appendChild(a);
-      });
-      if (prompts.length === 0) el.innerHTML = '<div style="color:var(--text-3);font-size:12px;">No prompts yet</div>';
-    } catch (e) {}
-  }
-
-  /* Prompt strip */
+  /* ── Prompt strip ── */
   async function fetchPrompts() {
     const strip = document.getElementById('promptStrip');
     try {
       const data = await fetchJSON(`${API}/api/prompts?limit=4`);
       const prompts = data.prompts || [];
       strip.innerHTML = '';
-      if (prompts.length === 0) {
+      if (!prompts.length) {
         strip.innerHTML = '<div class="empty-state" style="padding:20px;">No prompts yet</div>';
         return;
       }
@@ -345,13 +201,13 @@ function skeletonCard() {
           e.stopPropagation();
           const id = btn.dataset.copyPrompt;
           const text = btn.dataset.copyText;
-          try { await navigator.clipboard.writeText(text); } catch (err) {}
+          try { await navigator.clipboard.writeText(text); } catch (err) { /* noop */ }
           fetch(`${API}/api/prompts/copy/${id}`, { method: 'POST' }).catch(() => {});
           btn.classList.add('btn-copied');
           btn.textContent = '✅ Copied!';
           setTimeout(() => {
             btn.classList.remove('btn-copied');
-            btn.innerHTML = '📋 COPY';
+            btn.textContent = '📋 COPY';
           }, 2000);
         });
       });
@@ -375,24 +231,22 @@ function skeletonCard() {
       </div>`;
   }
 
-  /* Blog section */
-  let currentBlogTab = 'review';
+  /* ── Blog section ── */
   async function fetchBlogs(category) {
-    currentBlogTab = category || currentBlogTab;
     const grid = document.getElementById('blogGrid');
-    grid.innerHTML = '<div class="skeleton" style="height:140px;"></div>';
+    grid.innerHTML = '<div class="skeleton" style="height:150px;"></div>';
     try {
-      const data = await fetchJSON(`${API}/api/blogs?category=${encodeURIComponent(currentBlogTab)}&limit=6`);
+      const data = await fetchJSON(`${API}/api/blogs?category=${encodeURIComponent(category)}&limit=6`);
       const blogs = data.blogs || [];
       grid.innerHTML = '';
-      if (blogs.length === 0) {
+      if (!blogs.length) {
         grid.innerHTML = '<div class="empty-state" style="padding:20px;">No posts yet</div>';
         return;
       }
       blogs.forEach(b => grid.insertAdjacentHTML('beforeend', renderBlogCard(b)));
       grid.querySelectorAll('.blog-card').forEach(card => {
         card.addEventListener('click', () => {
-          window.location.href = `post.html?slug=${encodeURIComponent(card.dataset.slug)}`;
+          window.location.href = `/post/${encodeURIComponent(card.dataset.slug)}`;
         });
       });
     } catch (e) {
@@ -401,10 +255,9 @@ function skeletonCard() {
   }
 
   function renderBlogCard(b) {
-    const catClass = ['review', 'tutorial', 'news'].includes(b.category) ? b.category : 'review';
     return `
       <div class="blog-card" data-slug="${escapeHtml(b.slug)}">
-        <div class="blog-eyebrow ${catClass}">${escapeHtml(b.category)}</div>
+        <div class="blog-eyebrow ${escapeHtml(b.category)}">${escapeHtml(b.category)}</div>
         <div class="blog-title">${escapeHtml(b.title)}</div>
         <div class="blog-meta">${formatDate(b.published_at)} · ${readTime(b.content)} min read</div>
       </div>`;
@@ -418,48 +271,18 @@ function skeletonCard() {
     });
   });
 
-  /* Subscribe */
-  document.querySelectorAll('#subscribeBtn, [id="subscribeBtn"]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const form = btn.closest('.subscribe-form-inline') || btn.closest('.subscribe-form');
-      const input = form ? form.querySelector('input[type="email"]') : document.getElementById('subscribeEmail');
-      const successEl = form ? form.nextElementSibling : document.getElementById('subscribeSuccess');
-      if (!input) return;
-      const email = input.value.trim();
-      if (!email) { input.style.borderColor = '#f87171'; return; }
-      try {
-        await fetchJSON(`${API}/api/subscribe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        input.value = '';
-        input.style.borderColor = '';
-        if (successEl) { successEl.style.display = 'block'; setTimeout(() => { successEl.style.display = 'none'; }, 3000); }
-        btn.textContent = '\u2713';
-        setTimeout(() => { btn.textContent = '\u2192'; }, 2000);
-      } catch (e) {
-        btn.textContent = '!';
-        setTimeout(() => { btn.textContent = '\u2192'; }, 2000);
-      }
-    });
-  });
-
-  /* Navbar scroll effect */
-  const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 10);
-  });
-
-  /* Mobile bottom sheet */
+  /* ── Mobile bottom sheet ── */
   const sheetToggle = document.getElementById('sheetToggle');
   const sheetBackdrop = document.getElementById('sheetBackdrop');
   const bottomSheet = document.getElementById('bottomSheet');
+  function closeSheet() {
+    bottomSheet.classList.remove('open');
+    sheetBackdrop.classList.remove('open');
+  }
   if (sheetToggle) {
     sheetToggle.addEventListener('click', () => {
       bottomSheet.innerHTML = document.getElementById('sidebar').innerHTML;
-      bottomSheet.querySelectorAll('.sidebar-item').forEach(item => {
+      bottomSheet.querySelectorAll('.sidebar-item[data-filter-key]').forEach(item => {
         item.addEventListener('click', () => {
           applyFilter(item.dataset.filterKey, item.dataset.filterVal);
           closeSheet();
@@ -469,22 +292,30 @@ function skeletonCard() {
       sheetBackdrop.classList.add('open');
     });
     sheetBackdrop.addEventListener('click', closeSheet);
-    function closeSheet() {
-      bottomSheet.classList.remove('open');
-      sheetBackdrop.classList.remove('open');
-    }
   }
 
-  /* Read filters from URL on load */
-  function initFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('category')) state.filters.category = params.get('category');
-    if (params.get('pricing')) state.filters.pricing = params.get('pricing');
-    if (params.get('tag')) state.filters.tag = params.get('tag');
+  /* ── Navbar scroll effect ── */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  /* ── Init ── */
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('category')) state.filters.category = params.get('category');
+  if (params.get('pricing')) state.filters.pricing = params.get('pricing');
+  if (params.get('tag')) state.filters.tag = params.get('tag');
+
+  if (Object.keys(state.filters).length) {
+    document.querySelectorAll('.filter-row .filter-pill').forEach(pill => {
+      const active = state.filters[pill.dataset.key] === pill.dataset.val;
+      pill.classList.toggle('active', active);
+    });
+    document.querySelectorAll('.sidebar-item[data-filter-key]').forEach(item => {
+      item.classList.toggle('active', state.filters[item.dataset.filterKey] === item.dataset.filterVal);
+    });
   }
 
-  /* Init */
-  initFromURL();
   fetchStats();
   fetchNewToday();
   fetchCategories();
@@ -493,4 +324,5 @@ function skeletonCard() {
   fetchBlogs('review');
   fetchTools(1, false);
   setupInfiniteScroll();
+  setupNewsletter();
 })();

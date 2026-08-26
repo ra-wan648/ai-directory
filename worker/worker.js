@@ -255,6 +255,18 @@ const handler = {
       return this.apiToolsFeatured(env);
     }
 
+    if (pathname === '/api/search' && method === 'GET') {
+      return this.apiSearch(env, url.searchParams);
+    }
+
+    if (pathname === '/api/free-tools' && method === 'GET') {
+      return this.apiFreeTools(env);
+    }
+
+    if (pathname === '/api/compare' && method === 'GET') {
+      return this.apiCompare(env, url.searchParams);
+    }
+
     match = pathname.match(/^\/api\/tools\/([^/]+)$/);
     if (match && method === 'GET') {
       return this.apiToolsSlug(env, decodeURIComponent(match[1]));
@@ -346,6 +358,59 @@ const handler = {
        LIMIT 3`
     ).all();
     return okResponse({ tools: result.results });
+  },
+
+  // ─────────────────────────────
+  // ROUTE 4b: GET /api/search?q=
+  // ─────────────────────────────
+  async apiSearch(env, params) {
+    const q = (params.get('q') || '').trim();
+    if (!q) return okResponse({ results: [] });
+    const like = `%${q.toLowerCase().replace(/[%_]/g, m => '\\' + m)}%`;
+    const result = await env.DB.prepare(
+      `SELECT name, slug, description, short_desc, category, pricing, url, tags
+       FROM tools
+       WHERE status = 'published'
+         AND (LOWER(name) LIKE ? ESCAPE '\\' OR LOWER(description) LIKE ? ESCAPE '\\'
+              OR LOWER(short_desc) LIKE ? ESCAPE '\\' OR LOWER(category) LIKE ? ESCAPE '\\'
+              OR LOWER(tags) LIKE ? ESCAPE '\\')
+       ORDER BY views DESC
+       LIMIT 20`
+    ).bind(like, like, like, like, like).all();
+    return okResponse({ results: result.results });
+  },
+
+  // ─────────────────────────────
+  // ROUTE 4c: GET /api/free-tools
+  // ─────────────────────────────
+  async apiFreeTools(env) {
+    const result = await env.DB.prepare(
+      `SELECT name, slug, url, category, pricing
+       FROM tools
+       WHERE status = 'published' AND pricing = 'free'
+       ORDER BY views DESC
+       LIMIT 30`
+    ).all();
+    return okResponse({ tools: result.results });
+  },
+
+  // ─────────────────────────────
+  // ROUTE 4d: GET /api/compare?a=&b=
+  // ─────────────────────────────
+  async apiCompare(env, params) {
+    const a = params.get('a') || '';
+    const b = params.get('b') || '';
+    if (!a || !b) {
+      return jsonError('Two tool slugs are required (?a=slug1&b=slug2)', 400);
+    }
+    const [tool1, tool2] = await Promise.all([
+      env.DB.prepare(`SELECT * FROM tools WHERE slug = ? AND status = 'published'`).bind(a).first(),
+      env.DB.prepare(`SELECT * FROM tools WHERE slug = ? AND status = 'published'`).bind(b).first()
+    ]);
+    if (!tool1 || !tool2) {
+      return jsonError('One or both tools not found', 404);
+    }
+    return okResponse({ tool1: tool1, tool2: tool2 });
   },
 
   // ─────────────────────────────

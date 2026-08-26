@@ -5,44 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Prompt Library - Free Prompts for Midjourney, ChatGPT, Claude</title>
   <meta name="description" content="Ready-to-use AI prompts for Midjourney, DALL-E, ChatGPT, Claude and more. Free prompt library for image generation, text, code and video.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <nav class="navbar" id="navbar">
     <div class="navbar-left">
-      <a href="index.html">
-        <span class="navbar-dot"></span>
+      <a href="/" class="navbar-brand">
+        <span class="navbar-logo">A</span>
         <span>AI Directory</span>
       </a>
     </div>
     <div class="navbar-search">
-      <div class="search-bar" id="searchTrigger">
-        <span>&#128269;</span>
+      <div class="search-bar" id="searchTrigger" role="button" tabindex="0">
+        <span class="search-icon">&#128269;</span>
         <span>Search AI tools...</span>
         <kbd>&#8984;K</kbd>
       </div>
     </div>
     <div class="navbar-right">
-      <a href="submit.html" class="nav-link primary">Submit Tool</a>
-      <a href="blog.html" class="nav-link">Blog</a>
-      <a href="prompts.html" class="nav-link">Prompts</a>
+      <a href="/submit" class="nav-link primary">Submit Tool</a>
+      <a href="/blog" class="nav-link">Blog</a>
+      <a href="/prompts" class="nav-link">Prompts</a>
     </div>
   </nav>
 
   <div class="container">
     <div class="page-header">
-      <div class="breadcrumb" style="padding:0;margin-bottom:8px;font-size:13px;color:var(--text-muted);">
-        <a href="index.html" style="color:var(--accent);">Home</a><span style="margin:0 6px;">&rsaquo;</span><span>Prompts</span>
+      <div class="breadcrumb">
+        <a href="/">Home</a><span class="sep">&rsaquo;</span><span>Prompts</span>
       </div>
       <h1>&#127912; AI Prompt Library</h1>
       <p>Ready-to-use prompts for Midjourney, DALL&middot;E, ChatGPT, Claude</p>
     </div>
 
-    <input type="text" class="search-modal-input" id="promptSearch" placeholder="Search prompts..." style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg-card);color:var(--text-primary);outline:none;margin-bottom:16px;">
+    <input type="text" class="search-modal-input" id="promptSearch" placeholder="Search prompts..." style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:9px;font-size:14px;background:var(--bg-card);color:var(--text-primary);outline:none;margin-bottom:16px;">
 
     <div class="filter-row" id="promptFilters" style="margin-bottom:20px;">
       <button class="filter-pill active" data-pcat="">All</button>
@@ -71,27 +71,28 @@
       <div class="footer-links">
         <h4>Links</h4>
         <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="submit.html">Submit Tool</a></li>
-          <li><a href="blog.html">Blog</a></li>
-          <li><a href="prompts.html">Prompts</a></li>
-          <li><a href="rss.xml">RSS Feed</a></li>
+          <li><a href="/">Home</a></li>
+          <li><a href="/submit">Submit Tool</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/prompts">Prompts</a></li>
+          <li><a href="/rss.xml">RSS Feed</a></li>
         </ul>
       </div>
       <div class="footer-newsletter">
         <h4>Stay Updated</h4>
         <p>New AI tools in your inbox. No spam.</p>
-        <div class="subscribe-form-inline">
-          <input type="email" id="subscribeEmail" placeholder="your@email.com">
-          <button class="subscribe-btn-inline" id="subscribeBtn">&rarr;</button>
+        <div class="newsletter-wrap">
+          <input type="email" id="subscribeEmail" placeholder="your@email.com" autocomplete="email">
+          <button data-subscribe>&rarr;</button>
         </div>
-        <div class="subscribe-success" id="subscribeSuccess" style="display:none;">You&#39;re in! &#10003;</div>
+        <div class="subscribe-status" id="subscribeSuccess"></div>
       </div>
     </div>
   </footer>
 
   <div id="searchModalRoot"></div>
-  <script src="js/search.js"></script>
-  <script src="js/prompts.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/search.js"></script>
+  <script src="/js/prompts.js"></script>
 </body>
 </html>

@@ -5,115 +5,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Directory - Discover the Best AI Tools</title>
   <meta name="description" content="Browse and discover thousands of curated AI tools, from chatbots to image generators, coding assistants, and more.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2316A34A'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='800'>A</text></svg>">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2322c55e'/><text x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Inter,sans-serif' font-weight='800'>A</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <nav class="navbar">
+  <nav class="navbar" id="navbar">
     <div class="navbar-left">
-      <span class="navbar-dot"></span>
-      <a href="index.html" class="navbar-brand">AI Directory</a>
+      <a href="/" class="navbar-brand">
+        <span class="navbar-logo">A</span>
+        <span>AI Directory</span>
+      </a>
     </div>
     <div class="navbar-search">
-      <div class="search-bar">
-        <span>🔍</span>
-        <input type="text" id="search-input" placeholder="Search AI tools...">
+      <div class="search-bar" id="searchTrigger" role="button" tabindex="0">
+        <span class="search-icon">&#128269;</span>
+        <span>Search AI tools...</span>
+        <kbd>&#8984;K</kbd>
       </div>
-      <div class="search-dropdown" id="search-dropdown"></div>
     </div>
     <div class="navbar-right">
-      <a href="submit.html" class="nav-link primary">Submit Tool</a>
-      <a href="blog.html" class="nav-link">Blog</a>
-      <a href="prompts.html" class="nav-link">Prompts</a>
+      <a href="/submit" class="nav-link primary">Submit Tool</a>
+      <a href="/blog" class="nav-link">Blog</a>
+      <a href="/prompts" class="nav-link">Prompts</a>
     </div>
   </nav>
 
-  <div class="filter-pills">
-    <button data-filter="all" class="active">All</button>
-    <button data-filter="new">New</button>
-    <button data-filter="free">Free</button>
-    <button data-filter="freemium">Freemium</button>
-    <button data-filter="paid">Paid</button>
-    <button data-filter="featured">Featured</button>
-    <button data-filter="trending">Trending</button>
-    <button data-filter="open-source">Open Source</button>
-  </div>
+  <div class="container">
+    <!-- STATS BAR -->
+    <div class="stats-bar" id="statsBar">
+      <span class="stat"><span class="stat-emoji">&#128295;</span><strong id="statTools">0</strong>+ Tools</span>
+      <span class="stat"><span class="stat-emoji">&#128193;</span><strong id="statCategories">0</strong> Categories</span>
+      <span class="stat"><span class="stat-emoji">&#128337;</span><strong id="statToday">0</strong> Added Today</span>
+      <span class="updated" id="statUpdated"></span>
+    </div>
 
-  <div class="layout">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-title">Free Tools</div>
-      <div class="free-tools-list" id="free-tools-list"></div>
-    </aside>
+    <!-- NEW TODAY STRIP -->
+    <div class="section-label">&#128203; New Today</div>
+    <div class="strip-scroll" id="newTodayStrip">
+      <div class="skeleton-line" style="height:36px;width:160px;"></div>
+      <div class="skeleton-line" style="height:36px;width:160px;"></div>
+      <div class="skeleton-line" style="height:36px;width:160px;"></div>
+    </div>
 
-    <main>
-      <div id="categories-container"></div>
-
-      <section>
-        <h2 class="section-title">AI News</h2>
-        <div id="ai-news-grid" class="grid-4"></div>
-      </section>
-
-      <section>
-        <h2 class="section-title">Trending Categories</h2>
-        <div id="trending-categories" class="grid-4"></div>
-      </section>
-
-      <section>
-        <h2 class="section-title">Popular Platforms</h2>
-        <div class="platforms">
-          <span class="platform">OpenAI</span>
-          <span class="platform">Anthropic</span>
-          <span class="platform">Google</span>
-          <span class="platform">Meta</span>
-          <span class="platform">Microsoft</span>
-          <span class="platform">Mistral</span>
+    <!-- MAIN AREA -->
+    <div class="main-layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">Categories</div>
+        <div id="sidebarCategories">
+          <div class="skeleton-line" style="height:14px;margin:6px;"></div>
+          <div class="skeleton-line" style="height:14px;margin:6px;"></div>
         </div>
-      </section>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-header">Quick Filters</div>
+        <button class="sidebar-item" data-filter-key="pricing" data-filter-val="free">
+          <span class="item-label"><span>&#127873;</span><span>Free Only</span></span>
+        </button>
+        <button class="sidebar-item" data-filter-key="tag" data-filter-val="trending">
+          <span class="item-label"><span>&#128293;</span><span>Trending</span></span>
+        </button>
+        <button class="sidebar-item" data-filter-key="tag" data-filter-val="featured">
+          <span class="item-label"><span>&#11088;</span><span>Featured</span></span>
+        </button>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-header">Latest Prompts</div>
+        <div id="sidebarPrompts"></div>
+      </aside>
 
-      <section>
-        <h2 class="section-title">Explore More</h2>
-        <div class="grid-2">
-          <a class="resource" href="#"><span class="emoji">🎓</span> AI Courses</a>
-          <a class="resource" href="#"><span class="emoji">📰</span> AI News</a>
-          <a class="resource" href="#"><span class="emoji">🐙</span> GPTs List</a>
-          <a class="resource" href="#"><span class="emoji">▶️</span> YouTube AI</a>
-          <a class="resource" href="#"><span class="emoji">🏆</span> Top 100 AI</a>
-          <a class="resource" href="prompts.html"><span class="emoji">💬</span> Prompts</a>
-          <a class="resource" href="blog.html"><span class="emoji">📝</span> Blog &amp; Tips</a>
-          <a class="resource" href="submit.html"><span class="emoji">🚀</span> Submit Tool</a>
+      <!-- CONTENT -->
+      <div class="content">
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <div class="filter-row">
+            <button class="filter-pill active" data-key="reset" data-val="">All</button>
+            <button class="filter-pill" data-key="tag" data-val="new">New</button>
+            <button class="filter-pill" data-key="pricing" data-val="free">Free</button>
+            <button class="filter-pill" data-key="pricing" data-val="freemium">Freemium</button>
+            <button class="filter-pill" data-key="pricing" data-val="paid">Paid</button>
+            <button class="filter-pill" data-key="tag" data-val="featured">&#11088; Featured</button>
+            <button class="filter-pill" data-key="tag" data-val="trending">&#128293; Trending</button>
+          </div>
         </div>
-      </section>
-    </main>
+
+        <!-- TOOL GRID -->
+        <div class="grid" id="toolGrid"></div>
+        <div class="sentinel" id="sentinel">
+          <span class="loader-spinner"></span>
+        </div>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          No tools found. Try a different filter.
+        </div>
+
+        <!-- PROMPT STRIP -->
+        <div class="section-label">
+          &#127912; Today&#39;s Prompts
+          <a href="/prompts" class="see-all">See All &rarr;</a>
+        </div>
+        <div class="prompt-strip-grid" id="promptStrip">
+          <div class="skeleton" style="height:170px;"></div>
+          <div class="skeleton" style="height:170px;"></div>
+        </div>
+
+        <!-- BLOG SECTION -->
+        <div class="section-label">&#128240; AI Blog</div>
+        <div class="blog-tabs" id="blogTabs">
+          <button class="filter-pill active" data-blog-tab="review">Reviews</button>
+          <button class="filter-pill" data-blog-tab="tutorial">Tutorials</button>
+          <button class="filter-pill" data-blog-tab="news">News</button>
+        </div>
+        <div class="blog-grid" id="blogGrid">
+          <div class="skeleton" style="height:150px;"></div>
+          <div class="skeleton" style="height:150px;"></div>
+          <div class="skeleton" style="height:150px;"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="compare-bar" id="compare-bar">
-    <span id="compare-label"></span>
-    <button id="compare-btn" style="display:none">Compare Now →</button>
-    <button class="clear-btn" id="compare-clear">✕</button>
-  </div>
-
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-inner">
-      <div class="footer-title">AI Directory</div>
-      <p class="footer-sub">Stay updated with the newest AI tools and trends.</p>
-      <form class="newsletter" id="newsletter-form">
-        <input type="email" placeholder="Your email" required>
-        <button type="submit">Subscribe</button>
-      </form>
-      <div class="footer-links">
-        <a href="index.html">Home</a>
-        <a href="blog.html">Blog</a>
-        <a href="prompts.html">Prompts</a>
-        <a href="submit.html">Submit Tool</a>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
+      <div class="footer-brand">
+        <h3>AI Directory</h3>
+        <p>Discover the best AI tools, updated daily.</p>
+        <p class="copyright">&copy; 2026 AI Directory. All rights reserved.</p>
       </div>
-      <div class="footer-copy">© 2026 AI Directory</div>
+      <div class="footer-links">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/submit">Submit Tool</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/prompts">Prompts</a></li>
+          <li><a href="/rss.xml">RSS Feed</a></li>
+        </ul>
+      </div>
+      <div class="footer-newsletter">
+        <h4>Stay Updated</h4>
+        <p>New AI tools in your inbox. No spam.</p>
+        <div class="newsletter-wrap">
+          <input type="email" id="subscribeEmail" placeholder="your@email.com" autocomplete="email">
+          <button data-subscribe>&rarr;</button>
+        </div>
+        <div class="subscribe-status" id="subscribeSuccess"></div>
+      </div>
     </div>
   </footer>
 
-  <script src="js/app.js" defer></script>
+  <!-- Mobile bottom sheet -->
+  <button class="sheet-toggle" id="sheetToggle">&#9776;</button>
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="bottom-sheet" id="bottomSheet"></div>
+
+  <!-- Search modal container -->
+  <div id="searchModalRoot"></div>
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/search.js"></script>
+  <script src="/js/main.js"></script>
 </body>
 </html>
