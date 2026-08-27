@@ -1,6 +1,7 @@
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
   'Content-Type': 'application/json'
 };
 
@@ -20,6 +21,15 @@ const okResponse = (data) => {
     status: 200,
     headers: CORS_HEADERS
   });
+};
+
+const withCors = (response) => {
+  if (!response) return response;
+  const next = new Response(response.body, response);
+  next.headers.set('Access-Control-Allow-Origin', '*');
+  next.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  next.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  return next;
 };
 
 async function getJsonBody(request) {
@@ -170,10 +180,10 @@ const handler = {
     }
 
     try {
-      return await this.route(request, env, ctx, url, pathname, method);
+      return withCors(await this.route(request, env, ctx, url, pathname, method));
     } catch (e) {
       console.error('Route error:', e);
-      return jsonError(e.message || 'Internal server error', 500);
+      return withCors(jsonError(e.message || 'Internal server error', 500));
     }
   },
 
