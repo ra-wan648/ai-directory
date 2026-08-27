@@ -3,7 +3,7 @@
    Loaded before page-specific scripts.
    ═══════════════════════════════════════════════════ */
 
-const API = '';
+const API = 'https://ai-directory-worker.radwanislam648.workers.dev';
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
